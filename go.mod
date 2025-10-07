@@ -1,4 +1,4 @@
-module needle
+module github.com/roidaradal/needle
 
 go 1.25.1
 
