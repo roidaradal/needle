@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -11,6 +12,10 @@ func main() {
 		fmt.Println("Usage: needle <modulePath>")
 		return
 	}
-	modulePath := args[0]
-	fmt.Println(modulePath)
+
+	folder := args[0]
+	err := getModuleInfo(folder)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
