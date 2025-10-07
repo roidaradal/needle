@@ -1,53 +1,24 @@
 package main
 
-import (
-	"fmt"
-	"slices"
-	"strings"
-
-	"github.com/roidaradal/fn/dict"
-)
-
-const indent string = "  " // two spaces
+import "github.com/roidaradal/fn/dict"
 
 // Module info
 type module struct {
-	path string
-	name string
-	deps []string
-	tree map[string]*fsnode
+	path         string
+	name         string
+	deps         []string
+	tree         map[string]*fsnode
+	independent  []string           // independent packages
+	levels       map[int][]string   // non-independent package levels (0 = sink)
+	externals    dict.StringListMap // external dependency: extPkg => list of packages that use it
+	users        dict.StringListMap // internal dependency: intPkg => list of packages that use it
+	dependencies dict.StringListMap // internal dependency: intPkg => list of packages it depends on
 }
 
 // File system folder
 type fsnode struct {
 	files   []string
 	folders []string
-}
-
-func (m module) String() string {
-	out := make([]string, 0)
-	out = append(out, fmt.Sprintf("Path: %s", m.path))
-	out = append(out, fmt.Sprintf("Name: %s", m.name))
-	out = append(out, fmt.Sprintf("Deps: %d", len(m.deps)))
-	for _, dep := range m.deps {
-		out = append(out, fmt.Sprintf("%s- %s", indent, dep))
-	}
-	keys := dict.Keys(m.tree)
-	slices.Sort(keys)
-	out = append(out, fmt.Sprintf("Tree: %d", len(m.tree)))
-	indent2 := strings.Repeat(indent, 2)
-	for _, key := range keys {
-		node := m.tree[key]
-		numFiles := len(node.files)
-		if numFiles == 0 {
-			continue // skip if no files
-		}
-		out = append(out, fmt.Sprintf("%s- %s (%d, %d)", indent, key, numFiles, len(node.folders)))
-		for _, file := range node.files {
-			out = append(out, fmt.Sprintf("%s* %s", indent2, file))
-		}
-	}
-	return strings.Join(out, "\n")
 }
 
 // Create new module

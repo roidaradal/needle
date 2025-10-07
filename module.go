@@ -13,8 +13,6 @@ import (
 
 const indirect string = "// indirect"
 
-type moduleDecorator = func(*module) error
-
 // Extract information from the given module path
 func getModuleInfo(folder string) (*module, error) {
 	mod, err := validateModuleFolder(folder)
@@ -22,7 +20,7 @@ func getModuleInfo(folder string) (*module, error) {
 		return nil, err
 	}
 
-	decorators := []moduleDecorator{
+	decorators := []func(*module) error{
 		readGoModFile,
 		getModuleContents,
 		buildModuleTree,
@@ -125,7 +123,7 @@ func getModuleContents(mod *module) error {
 // Build the module tree, going through folders and subfolders
 func buildModuleTree(mod *module) error {
 	folders := fn.Map(mod.tree["/"].folders, func(folder string) string {
-		return fmt.Sprintf("/%s/", folder)
+		return fmt.Sprintf("/%s", folder)
 	})
 	q := ds.QueueFrom(folders)
 	for !q.IsEmpty() {
@@ -137,13 +135,13 @@ func buildModuleTree(mod *module) error {
 		}
 		mod.tree[folder] = node
 		for _, subFolder := range node.folders {
-			q.Enqueue(fmt.Sprintf("%s%s/", folder, subFolder))
+			q.Enqueue(fmt.Sprintf("%s/%s", folder, subFolder))
 		}
 	}
 	return nil
 }
 
-// Build the node for the given folder
+// Build the node for the given folder, get subfolders and go files
 func buildNode(folder string) (*fsnode, error) {
 	entries, err := os.ReadDir(folder)
 	if err != nil {

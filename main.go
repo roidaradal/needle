@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"slices"
-
-	"github.com/roidaradal/fn/dict"
 )
 
 func main() {
@@ -25,26 +22,20 @@ func main() {
 	}
 
 	// Internal dependency
-	inDep, err := internalDependency(mod)
+	err = internalDependency(mod)
 	if err != nil {
 		log.Fatal(err)
-	}
-	independent, levels := splitIndependentTree(inDep)
-	fmt.Println("Independent:", len(independent), independent)
-	fmt.Println("Levels:", len(levels))
-	for level := range len(levels) {
-		fmt.Println(level, levels[level])
 	}
 
 	// External dependency
-	extDep, err := externalDependency(mod)
+	err = externalDependency(mod)
 	if err != nil {
 		log.Fatal(err)
 	}
-	keys := dict.Keys(extDep)
-	slices.Sort(keys)
-	fmt.Println("External:", len(keys))
-	for _, k := range keys {
-		fmt.Println(k, extDep[k])
-	}
+
+	// Split internal dependencies => independent, levels
+	splitIndependentTree(mod)
+
+	// Display text report
+	textReport(mod)
 }
