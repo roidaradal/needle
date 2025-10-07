@@ -16,10 +16,10 @@ const indirect string = "// indirect"
 type moduleDecorator = func(*module) error
 
 // Extract information from the given module path
-func getModuleInfo(folder string) error {
+func getModuleInfo(folder string) (*module, error) {
 	mod, err := validateModuleFolder(folder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	decorators := []moduleDecorator{
@@ -31,12 +31,11 @@ func getModuleInfo(folder string) error {
 	for _, decorator := range decorators {
 		err = decorator(mod)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	fmt.Println(mod)
-	return nil
+	return mod, nil
 }
 
 // Check if folder name does not start with dot, underscore, dash
@@ -132,12 +131,12 @@ func buildModuleTree(mod *module) error {
 	for !q.IsEmpty() {
 		folder, _ := q.Dequeue()
 		path := mod.path + folder
-		n, err := buildNode(path)
+		node, err := buildNode(path)
 		if err != nil {
 			return err
 		}
-		mod.tree[folder] = n
-		for _, subFolder := range n.folders {
+		mod.tree[folder] = node
+		for _, subFolder := range node.folders {
 			q.Enqueue(fmt.Sprintf("%s%s/", folder, subFolder))
 		}
 	}
@@ -145,19 +144,19 @@ func buildModuleTree(mod *module) error {
 }
 
 // Build the node for the given folder
-func buildNode(folder string) (*node, error) {
+func buildNode(folder string) (*fsnode, error) {
 	entries, err := os.ReadDir(folder)
 	if err != nil {
 		return nil, err
 	}
-	n := newNode()
+	node := newNode()
 	for _, e := range entries {
 		name := e.Name()
 		if e.IsDir() && isPublicFolder(name) {
-			n.folders = append(n.folders, name)
+			node.folders = append(node.folders, name)
 		} else if strings.HasSuffix(name, ".go") {
-			n.files = append(n.files, name)
+			node.files = append(node.files, name)
 		}
 	}
-	return n, nil
+	return node, nil
 }

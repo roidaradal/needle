@@ -10,14 +10,16 @@ import (
 
 const indent string = "  " // two spaces
 
+// Module info
 type module struct {
 	path string
 	name string
 	deps []string
-	tree map[string]*node
+	tree map[string]*fsnode
 }
 
-type node struct {
+// File system folder
+type fsnode struct {
 	files   []string
 	folders []string
 }
@@ -35,30 +37,32 @@ func (m module) String() string {
 	out = append(out, fmt.Sprintf("Tree: %d", len(m.tree)))
 	indent2 := strings.Repeat(indent, 2)
 	for _, key := range keys {
-		n := m.tree[key]
-		numFiles, numFolders := len(n.files), len(n.folders)
+		node := m.tree[key]
+		numFiles := len(node.files)
 		if numFiles == 0 {
 			continue // skip if no files
 		}
-		out = append(out, fmt.Sprintf("%s- %s (%d, %d)", indent, key, numFiles, numFolders))
-		for _, file := range n.files {
+		out = append(out, fmt.Sprintf("%s- %s (%d, %d)", indent, key, numFiles, len(node.folders)))
+		for _, file := range node.files {
 			out = append(out, fmt.Sprintf("%s* %s", indent2, file))
 		}
 	}
 	return strings.Join(out, "\n")
 }
 
+// Create new module
 func newModule() *module {
 	return &module{
 		path: "",
 		name: "",
 		deps: make([]string, 0),
-		tree: make(map[string]*node),
+		tree: make(map[string]*fsnode),
 	}
 }
 
-func newNode() *node {
-	return &node{
+// Create new fsnode
+func newNode() *fsnode {
+	return &fsnode{
 		files:   make([]string, 0),
 		folders: make([]string, 0),
 	}

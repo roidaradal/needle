@@ -1,3 +1,8 @@
+v0.1.2 - Dependency Tree
+    x Commit: 2025-10-07 14:14
+    x Compute external dependencies
+    x Compute internal dependencies
+    x Separate independent packages and tree packages
 v0.1.1 - Module Info 
     x Commit: 2025-10-07 11:11
     x Validate module path 
