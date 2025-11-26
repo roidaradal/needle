@@ -1,3 +1,12 @@
+TODO:
+- Graphical representation of dependencies 
+- Add stats: num files, num lines
+- Add options in command line args
+- Generate package public APIs (list)
+#############################################################
+v0.1.5 - Update Fn 
+    x Commit: 2025-11-26 17:12
+    x Update fn package
 v0.1.4 - Update Module Name 
     x Commit: 2025-10-07 16:10
     x Update module name to github.com/roidaradal/needle

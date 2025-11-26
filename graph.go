@@ -5,11 +5,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/roidaradal/fn"
-	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/ds"
 	"github.com/roidaradal/fn/io"
+	"github.com/roidaradal/fn/lang"
+	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/fn/str"
 )
 
@@ -101,7 +101,7 @@ func fileDependency(mod *module, path string, internal bool) ([]string, error) {
 
 	deps := make([]string, 0)
 	depMode := false
-	depCheck := fn.Ternary(internal, isInternal, isExternal)
+	depCheck := lang.Ternary(internal, isInternal, isExternal)
 	for _, line := range lines {
 		if strings.HasPrefix(line, "import ") {
 			if strings.HasSuffix(line, "(") {
@@ -160,7 +160,7 @@ func splitIndependentTree(mod *module) {
 
 	// Gather independent packages
 	independent := make([]string, 0)
-	q := ds.NewQueue[string]()
+	q := ds.NewQueue[string](len(out))
 	for pkg := range out {
 		// Independent packages = no in & out
 		if len(in[pkg]) == 0 && len(out[pkg]) == 0 {
@@ -174,19 +174,19 @@ func splitIndependentTree(mod *module) {
 
 	// Compute tree package levels
 	levelOf := make(map[string]int)
-	for !q.IsEmpty() {
+	for q.NotEmpty() {
 		pkg, _ := q.Dequeue()
 		if len(out[pkg]) == 0 {
 			// No dependency = level 0
 			levelOf[pkg] = 0
 			continue
 		}
-		complete := check.All(out[pkg], func(dep string) bool {
+		complete := list.All(out[pkg], func(dep string) bool {
 			return dict.HasKey(levelOf, dep)
 		})
 		if complete {
 			// All dependencies have computed levels = get max + 1
-			depLevels := fn.Translate(out[pkg], levelOf)
+			depLevels := list.Translate(out[pkg], levelOf)
 			levelOf[pkg] = slices.Max(depLevels) + 1
 			continue
 		}

@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/roidaradal/fn"
 	"github.com/roidaradal/fn/ds"
 	"github.com/roidaradal/fn/io"
+	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/fn/str"
 )
 
@@ -49,13 +49,8 @@ func validateModuleFolder(folder string) (*module, error) {
 	// Remove trailing slash if necessary
 	folder = strings.TrimSuffix(folder, "/")
 
-	// TODO: replace with io.IsDir(path)
 	// Check if path is directory
-	f, err := os.Stat(folder)
-	if err != nil {
-		return nil, err
-	}
-	if !f.IsDir() {
+	if !io.IsDir(folder) {
 		return nil, fmt.Errorf("path '%s' is not a directory", folder)
 	}
 
@@ -122,7 +117,7 @@ func getModuleContents(mod *module) error {
 
 // Build the module tree, going through folders and subfolders
 func buildModuleTree(mod *module) error {
-	folders := fn.Map(mod.tree["/"].folders, func(folder string) string {
+	folders := list.Map(mod.tree["/"].folders, func(folder string) string {
 		return fmt.Sprintf("/%s", folder)
 	})
 	q := ds.QueueFrom(folders)
