@@ -1,9 +1,11 @@
 TODO:
-- Graphical representation of dependencies 
-- Add stats: num files, num lines
-- Add options in command line args
-- Generate package public APIs (list)
+- viz:      Graphical representation of dependencies 
+- stats:    num files, num lines
+- api:      Generate package public APIs (list)
 #############################################################
+v0.1.6 - Refactor 
+    x Commit: 2025-11-26 16:17
+    x Refactor needle
 v0.1.5 - Update Fn 
     x Commit: 2025-11-26 17:12
     x Update fn package

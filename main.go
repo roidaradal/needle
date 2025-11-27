@@ -4,38 +4,32 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/roidaradal/needle/internal/needle"
 )
 
+const usage string = "Usage: needle <deps|viz|stats|api> <path>"
+
 func main() {
-	// Get folder from args
+	option, path := getArgs()
+	switch option {
+	case "deps":
+		mod, err := needle.NewDepsModule(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(mod)
+	default:
+		fmt.Println(usage)
+	}
+}
+
+func getArgs() (option, path string) {
 	args := os.Args[1:]
-	if len(args) < 1 {
-		fmt.Println("Usage: needle <modulePath>")
-		return
+	if len(args) < 2 {
+		fmt.Println(usage)
+		os.Exit(1)
 	}
-	folder := args[0]
-
-	// Get module info
-	mod, err := getModuleInfo(folder)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Internal dependency
-	err = internalDependency(mod)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// External dependency
-	err = externalDependency(mod)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Split internal dependencies => independent, levels
-	splitIndependentTree(mod)
-
-	// Display text report
-	textReport(mod)
+	option, path = args[0], args[1]
+	return option, path
 }

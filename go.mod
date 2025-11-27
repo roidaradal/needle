@@ -2,6 +2,4 @@ module github.com/roidaradal/needle
 
 go 1.25.4
 
-require github.com/roidaradal/fn v0.5.0
-
-require golang.org/x/text v0.31.0 // indirect
+require github.com/roidaradal/fn v0.5.2

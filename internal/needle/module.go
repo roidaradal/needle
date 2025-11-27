@@ -1,0 +1,163 @@
+package needle
+
+import (
+	"fmt"
+	"os"
+	"slices"
+	"strings"
+
+	"github.com/roidaradal/fn/dict"
+	"github.com/roidaradal/fn/ds"
+	"github.com/roidaradal/fn/io"
+	"github.com/roidaradal/fn/list"
+	"github.com/roidaradal/fn/str"
+)
+
+// Create Module object for Go module at path
+func baseModule(path string) (*Module, error) {
+	mod, err := newModuleAt(path)
+	if err != nil {
+		return nil, err
+	}
+
+	decorators := []func(*Module) error{
+		readGoModFile,
+		buildModuleTree,
+	}
+
+	for _, decorator := range decorators {
+		err = decorator(mod)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return mod, nil
+}
+
+// Check if path is a valid directory, create Module object for path
+func newModuleAt(path string) (*Module, error) {
+	// Remove trailing slash if necessary
+	path = strings.TrimSuffix(path, "/")
+	// Check if path is directory
+	if !io.IsDir(path) {
+		return nil, fmt.Errorf("path '%s' is not a directory", path)
+	}
+	mod := newModule()
+	mod.Path = path
+	return mod, nil
+}
+
+// Read go.mod file and get module name and external dependencies
+func readGoModFile(mod *Module) error {
+	path := fmt.Sprintf("%s/go.mod", mod.Path)
+	if !io.PathExists(path) {
+		return fmt.Errorf("file '%s' does not exist", path)
+	}
+
+	lines, err := io.ReadNonEmptyLines(path)
+	if err != nil {
+		return err
+	}
+
+	depMode := false
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "module ") {
+			// Get module name
+			if name, ok := getLinePart(line, 1); ok {
+				mod.Name = name
+			}
+		} else if strings.HasPrefix(line, "require ") {
+			if strings.HasSuffix(line, "(") {
+				// toggle depMode on
+				depMode = true
+			} else if isDirectDependency(line) {
+				// direct dependency = add to external dependencies
+				if extPkg, ok := getLinePart(line, 1); ok {
+					mod.ExternalDeps = append(mod.ExternalDeps, extPkg)
+				}
+			}
+		} else if line == ")" {
+			// toggle depMode off
+			depMode = false
+		} else if depMode && isDirectDependency(line) {
+			// depMode and direct dependency = add to external dependencies
+			if extPkg, ok := getLinePart(line, 0); ok {
+				mod.ExternalDeps = append(mod.ExternalDeps, extPkg)
+			}
+		}
+	}
+	return nil
+}
+
+// Build module tree, going through folders and subfolders
+func buildModuleTree(mod *Module) error {
+	rootNode, err := buildNode(mod.Path)
+	if err != nil {
+		return err
+	}
+	mod.Tree["/"] = rootNode
+
+	rootFolders := list.Map(rootNode.Folders, func(folder string) string {
+		return fmt.Sprintf("/%s", folder)
+	})
+	q := ds.QueueFrom(rootFolders)
+	for q.NotEmpty() {
+		folder, _ := q.Dequeue()
+		path := mod.Path + folder
+		node, err := buildNode(path)
+		if err != nil {
+			return err
+		}
+		if len(node.Files) > 0 {
+			mod.Tree[folder] = node
+		}
+		for _, subFolder := range node.Folders {
+			q.Enqueue(fmt.Sprintf("%s/%s", folder, subFolder))
+		}
+	}
+	return nil
+}
+
+// Build Node for given folder path, get subfolders and .go files
+func buildNode(path string) (*Node, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	node := newNode()
+	for _, e := range entries {
+		name := e.Name()
+		if e.IsDir() && isPublicFolder(name) {
+			node.Folders = append(node.Folders, name)
+		} else if strings.HasSuffix(name, ".go") {
+			node.Files = append(node.Files, name)
+		}
+	}
+	return node, nil
+}
+
+// Module string representation
+func (m Module) String() string {
+	out := []string{
+		fmt.Sprintf("Name: %s", m.Name),
+	}
+	out = append(out, fmt.Sprintf("Tree: %d / %d", m.CountValidNodes(), len(m.Tree)))
+	keys := dict.Keys(m.Tree)
+	slices.Sort(keys)
+	maxLength := slices.Max(list.Map(keys, str.Length))
+	template := fmt.Sprintf("\t%%-%ds : %%s", maxLength)
+	for _, key := range keys {
+		line := fmt.Sprintf(template, key, m.Tree[key])
+		out = append(out, line)
+	}
+	return strings.Join(out, "\n")
+}
+
+// Count valid Nodes = len(Files) > 0
+func (m Module) CountValidNodes() int {
+	validNodes := list.Filter(dict.Values(m.Tree), func(node *Node) bool {
+		return len(node.Files) > 0
+	})
+	return len(validNodes)
+}

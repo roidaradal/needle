@@ -7,4 +7,4 @@ DAG of Module ⇒ DAGoM ⇒ Needle
 `go install github.com/roidaradal/needle@latest`
 
 ## Usage 
-`needle <modulePath>`
+`needle <deps|viz|stats|api> <modulePath>`
