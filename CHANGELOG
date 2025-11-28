@@ -1,11 +1,32 @@
 TODO:
-- viz:      Graphical representation of dependencies 
-- stats:    num files, num lines
-- api:      Generate package public APIs (list)
-#############################################################
+- api:
+    -  Generate package public APIs (list)
+- viz:
+    - graphical representation of dependencies 
+    - graphs/charts of module stats
+- stats:
+    - Categorize package: library vs main 
+    - Categorize line: code, head, space, comment
+    - Breakdown code: actual vs error handling:
+        - if err != nil
+        - endswith ; err != nil
+    - Count functions: public, private, methods
+    - Count types: struct, interface, alias 
+    - Package consts and variables
+    - Ratios of Code Line usage: function, types, package vars
+- Add help and usage info
+###############################################################
+v0.1.7 - StatsModule 
+    x Commit: 2025-11-28 16:08
+    x DepsModule, StatsModule concurrency
+    x Per package: Count Files
+        x count Code vs Test files, if module has test files 
+    x Per package: list files x line count per file
+        x stats for Code vs Test files, if module has test files
 v0.1.6 - Refactor 
     x Commit: 2025-11-26 16:17
     x Refactor needle
+    x Add MIT License
 v0.1.5 - Update Fn 
     x Commit: 2025-11-26 17:12
     x Update fn package

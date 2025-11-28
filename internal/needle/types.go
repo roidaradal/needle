@@ -65,3 +65,72 @@ func newDepsModule(mod *Module) *DepsModule {
 		DependencyLevels: make(map[int][]string),
 	}
 }
+
+// Stats Module
+type StatsModule struct {
+	*Module
+	Packages []*Package
+}
+
+// Create new StatsModule
+func newStatsModule(mod *Module) *StatsModule {
+	if mod == nil {
+		mod = newModule()
+	}
+	return &StatsModule{
+		Module:   mod,
+		Packages: make([]*Package, 0),
+	}
+}
+
+type (
+	PackageType string
+	FileType    string
+	LineType    string
+)
+
+const (
+	PKG_MAIN     PackageType = "main"
+	PKG_LIB      PackageType = "lib"
+	FILE_CODE    FileType    = "code"
+	FILE_TEST    FileType    = "test"
+	LINE_CODE    LineType    = "code"
+	LINE_HEAD    LineType    = "head"
+	LINE_SPACE   LineType    = "space"
+	LINE_COMMENT LineType    = "comment"
+)
+
+// Package object
+type Package struct {
+	Name  string
+	Type  PackageType
+	Files []*File
+}
+
+// File object
+type File struct {
+	Name  string
+	Type  FileType
+	Lines []*Line
+}
+
+// Line object
+type Line struct {
+	Type   LineType
+	Length int // numChars
+}
+
+// Package code for lookup
+func (pkg Package) GetCode() string {
+	return pkg.Name
+}
+
+// File code for lookup
+func (f File) GetCode() string {
+	return f.Name
+}
+
+type (
+	TreeEntry  = dict.Entry[string, *Node]
+	CountEntry = dict.Entry[string, int]
+)

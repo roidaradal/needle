@@ -10,7 +10,6 @@ import (
 	"github.com/roidaradal/fn/ds"
 	"github.com/roidaradal/fn/io"
 	"github.com/roidaradal/fn/list"
-	"github.com/roidaradal/fn/str"
 )
 
 // Create Module object for Go module at path
@@ -24,13 +23,11 @@ func baseModule(path string) (*Module, error) {
 		readGoModFile,
 		buildModuleTree,
 	}
-
-	for _, decorator := range decorators {
-		err = decorator(mod)
-		if err != nil {
-			return nil, err
-		}
+	err = applyDecorators(mod, decorators)
+	if err != nil {
+		return nil, err
 	}
+
 	return mod, nil
 }
 
@@ -138,26 +135,36 @@ func buildNode(path string) (*Node, error) {
 }
 
 // Module string representation
-func (m Module) String() string {
+func (mod Module) String() string {
 	out := []string{
-		fmt.Sprintf("Name: %s", m.Name),
+		fmt.Sprintf("Name: %s", mod.Name),
 	}
-	out = append(out, fmt.Sprintf("Tree: %d / %d", m.CountValidNodes(), len(m.Tree)))
-	keys := dict.Keys(m.Tree)
+	out = append(out, fmt.Sprintf("Tree: %d / %d", mod.CountValidNodes(), len(mod.Tree)))
+	keys := dict.Keys(mod.Tree)
 	slices.Sort(keys)
-	maxLength := slices.Max(list.Map(keys, str.Length))
+	maxLength := getMaxLength(keys)
 	template := fmt.Sprintf("\t%%-%ds : %%s", maxLength)
 	for _, key := range keys {
-		line := fmt.Sprintf(template, key, m.Tree[key])
+		line := fmt.Sprintf(template, key, mod.Tree[key])
 		out = append(out, line)
 	}
 	return strings.Join(out, "\n")
 }
 
 // Count valid Nodes = len(Files) > 0
-func (m Module) CountValidNodes() int {
-	validNodes := list.Filter(dict.Values(m.Tree), func(node *Node) bool {
+func (mod Module) CountValidNodes() int {
+	validNodes := list.Filter(dict.Values(mod.Tree), func(node *Node) bool {
 		return len(node.Files) > 0
 	})
 	return len(validNodes)
+}
+
+// Valid Tree Entries = len(node.Files) > 0
+func (mod Module) ValidTreeEntries() []TreeEntry {
+	entries := dict.Entries(mod.Tree)
+	entries = list.Filter(entries, func(e TreeEntry) bool {
+		node := e.Value
+		return len(node.Files) > 0
+	})
+	return entries
 }

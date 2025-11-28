@@ -11,7 +11,6 @@ import (
 	"github.com/roidaradal/fn/io"
 	"github.com/roidaradal/fn/lang"
 	"github.com/roidaradal/fn/list"
-	"github.com/roidaradal/fn/str"
 )
 
 // Build new DepsModule for Go module at path
@@ -28,45 +27,76 @@ func NewDepsModule(path string) (*DepsModule, error) {
 		internalDependencies,
 		computeDependencyLevels,
 	}
-	for _, decorator := range decorators {
-		err = decorator(mod)
-		if err != nil {
-			return nil, err
-		}
+	err = applyDecorators(mod, decorators)
+	if err != nil {
+		return nil, err
 	}
 	return mod, nil
 }
 
 // Process the external package dependencies of each subpackage
 func externalDependencies(mod *DepsModule) error {
-	for folder, node := range mod.Tree {
-		if len(node.Files) == 0 {
-			continue // skip if no files
-		}
-		extDeps, err := packageDependencies(mod.Module, folder, node.Files, false)
-		if err != nil {
-			return err
-		}
-		for _, extPkg := range extDeps {
-			mod.ExternalUsers[extPkg] = append(mod.ExternalUsers[extPkg], folder)
-		}
+	type data struct {
+		folder  string
+		extDeps []string
 	}
+
+	// Run concurrently
+	cfg := &taskConfig[TreeEntry, data]{
+		Task: func(entry TreeEntry) (data, error) {
+			var d data
+			folder, node := entry.Tuple()
+			extDeps, err := packageDependencies(mod.Module, folder, node.Files, false)
+			if err != nil {
+				return d, err
+			}
+			return data{folder, extDeps}, nil
+		},
+		Receive: func(d data) {
+			for _, extPkg := range d.extDeps {
+				mod.ExternalUsers[extPkg] = append(mod.ExternalUsers[extPkg], d.folder)
+			}
+		},
+	}
+	entries := mod.ValidTreeEntries()
+	err := runConcurrent(entries, cfg)
+	if err != nil {
+		return err
+	}
+
+	// Sort external users values
 	dict.SortValues(mod.ExternalUsers)
 	return nil
 }
 
 // Process the internal package dependencies of each subpackage
 func internalDependencies(mod *DepsModule) error {
-	for folder, node := range mod.Tree {
-		if len(node.Files) == 0 {
-			continue // skip if no files
-		}
-		subDeps, err := packageDependencies(mod.Module, folder, node.Files, true)
-		if err != nil {
-			return err
-		}
-		mod.DependenciesOf[folder] = subDeps
+	type data struct {
+		folder  string
+		subDeps []string
 	}
+
+	// Run concurrently
+	cfg := &taskConfig[TreeEntry, data]{
+		Task: func(entry TreeEntry) (data, error) {
+			var d data
+			folder, node := entry.Tuple()
+			subDeps, err := packageDependencies(mod.Module, folder, node.Files, true)
+			if err != nil {
+				return d, err
+			}
+			return data{folder, subDeps}, nil
+		},
+		Receive: func(d data) {
+			mod.DependenciesOf[d.folder] = d.subDeps
+		},
+	}
+	entries := mod.ValidTreeEntries()
+	err := runConcurrent(entries, cfg)
+	if err != nil {
+		return err
+	}
+
 	// Compute inverse dependency => which package uses it
 	mod.InternalUsers = dict.GroupByValueList(mod.DependenciesOf)
 	dict.SortValues(mod.InternalUsers)
@@ -119,16 +149,25 @@ func computeDependencyLevels(mod *DepsModule) error {
 
 // Gather dependencies of files in folder path
 func packageDependencies(mod *Module, path string, files []string, isInternal bool) ([]string, error) {
-	pkgDeps := ds.NewSet[string]()
 	rootFolder := mod.Path + path
-	for _, filename := range files {
-		path := fmt.Sprintf("%s/%s", rootFolder, filename)
-		deps, err := fileDependencies(mod, path, isInternal)
-		if err != nil {
-			return nil, err
-		}
-		pkgDeps.AddItems(deps)
+	pkgDeps := ds.NewSet[string]()
+
+	// Run concurrently
+	cfg := &taskConfig[string, []string]{
+		Task: func(filename string) ([]string, error) {
+			path := fmt.Sprintf("%s/%s", rootFolder, filename)
+			return fileDependencies(mod, path, isInternal)
+		},
+		Receive: func(deps []string) {
+			pkgDeps.AddItems(deps)
+		},
 	}
+	err := runConcurrent(files, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the unique list of pkg dependencies and sort it
 	deps := pkgDeps.Items()
 	slices.Sort(deps)
 	return deps, nil
@@ -177,52 +216,52 @@ func fileDependencies(mod *Module, path string, isInternal bool) ([]string, erro
 }
 
 // Get subpackages that are part of dependency tree
-func (m DepsModule) DependencyPackages() []string {
-	return dict.Keys(dict.SwapList(m.DependencyLevels))
+func (mod DepsModule) DependencyPackages() []string {
+	return dict.Keys(dict.SwapList(mod.DependencyLevels))
 }
 
 // DepsModule string representation
-func (m DepsModule) String() string {
+func (mod DepsModule) String() string {
 	// Initialize with base Module output
-	out := []string{m.Module.String()}
+	out := []string{mod.Module.String()}
 	// External dependencies
-	out = append(out, fmt.Sprintf("ExtDeps: %d", len(m.ExternalDeps)))
-	entries := dict.Entries(m.ExternalUsers)
+	out = append(out, fmt.Sprintf("ExtDeps: %d", len(mod.ExternalDeps)))
+	entries := dict.Entries(mod.ExternalUsers)
 	slices.SortFunc(entries, func(a, b dict.Entry[string, []string]) int {
 		// Sort by descending order of dependent counts
 		return cmp.Compare(len(b.Value), len(a.Value))
 	})
 	for _, entry := range entries {
-		extPkg, users := entry.Key, entry.Value
+		extPkg, users := entry.Tuple()
 		out = append(out, fmt.Sprintf("\t%d : %s", len(users), extPkg))
 		out = append(out, "\t\t"+strings.Join(users, " "))
 	}
 	// Compute dependent, independent counts
-	totalCount := m.CountValidNodes()
-	indepCount := len(m.IndependentSubs)
+	totalCount := mod.CountValidNodes()
+	indepCount := len(mod.IndependentSubs)
 	depCount := totalCount - indepCount
 	// Dependency Tree
 	out = append(out, fmt.Sprintf("DepSubs: %d / %d", depCount, totalCount))
-	maxLength := slices.Max(list.Map(m.DependencyPackages(), str.Length))
+	maxLength := getMaxLength(mod.DependencyPackages())
 	template := fmt.Sprintf("\tL%%d: %%-%ds %%2d | %%d", maxLength)
 	template2 := fmt.Sprintf("\t%%%ds | %%s", maxLength+7)
-	levels := dict.Keys(m.DependencyLevels)
+	levels := dict.Keys(mod.DependencyLevels)
 	slices.Sort(levels)
 	for _, level := range levels {
-		for _, subPkg := range m.DependencyLevels[level] {
-			if slices.Contains(m.IndependentSubs, subPkg) {
+		for _, subPkg := range mod.DependencyLevels[level] {
+			if slices.Contains(mod.IndependentSubs, subPkg) {
 				continue
 			}
-			inCount := len(m.InternalUsers[subPkg])
-			outCount := len(m.DependenciesOf[subPkg])
+			inCount := len(mod.InternalUsers[subPkg])
+			outCount := len(mod.DependenciesOf[subPkg])
 			out = append(out, fmt.Sprintf(template, level, subPkg, outCount, inCount))
 			for i := range max(inCount, outCount) {
 				inboundDep, outboundDep := "", ""
 				if i < inCount {
-					inboundDep = m.InternalUsers[subPkg][i]
+					inboundDep = "-> " + mod.InternalUsers[subPkg][i]
 				}
 				if i < outCount {
-					outboundDep = m.DependenciesOf[subPkg][i]
+					outboundDep = mod.DependenciesOf[subPkg][i] + " <-"
 				}
 				out = append(out, fmt.Sprintf(template2, outboundDep, inboundDep))
 			}
@@ -231,7 +270,7 @@ func (m DepsModule) String() string {
 	// Independent subpackages
 	out = append(out, fmt.Sprintf("IndepSubs: %d / %d", indepCount, totalCount))
 	if indepCount > 0 {
-		out = append(out, "\t"+strings.Join(m.IndependentSubs, " "))
+		out = append(out, "\t"+strings.Join(mod.IndependentSubs, " "))
 	}
 	return strings.Join(out, "\n")
 }

@@ -19,6 +19,12 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Println(mod)
+	case "stats":
+		mod, err := needle.NewStatsModule(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(mod)
 	default:
 		fmt.Println(usage)
 	}
