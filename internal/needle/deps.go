@@ -226,15 +226,15 @@ func (mod DepsModule) String() string {
 	out := []string{mod.Module.String()}
 	// External dependencies
 	out = append(out, fmt.Sprintf("ExtDeps: %d", len(mod.ExternalDeps)))
-	if !mod.IsCompact {
-		entries := dict.Entries(mod.ExternalUsers)
-		slices.SortFunc(entries, func(a, b dict.Entry[string, []string]) int {
-			// Sort by descending order of dependent counts
-			return cmp.Compare(len(b.Value), len(a.Value))
-		})
-		for _, entry := range entries {
-			extPkg, users := entry.Tuple()
-			out = append(out, fmt.Sprintf("\t%d : %s", len(users), extPkg))
+	entries := dict.Entries(mod.ExternalUsers)
+	slices.SortFunc(entries, func(a, b dict.Entry[string, []string]) int {
+		// Sort by descending order of dependent counts
+		return cmp.Compare(len(b.Value), len(a.Value))
+	})
+	for _, entry := range entries {
+		extPkg, users := entry.Tuple()
+		out = append(out, fmt.Sprintf("\t%d : %s", len(users), extPkg))
+		if mod.ShowDetails {
 			out = append(out, "\t\t"+strings.Join(users, " "))
 		}
 	}
@@ -244,20 +244,20 @@ func (mod DepsModule) String() string {
 	depCount := totalCount - indepCount
 	// Dependency Tree
 	out = append(out, fmt.Sprintf("DepSubs: %d / %d", depCount, totalCount))
-	if !mod.IsCompact {
-		maxLength := getMaxLength(mod.DependencyPackages())
-		template := fmt.Sprintf("\tL%%d: %%-%ds %%2d | %%d", maxLength)
-		template2 := fmt.Sprintf("\t%%%ds | %%s", maxLength+7)
-		levels := dict.Keys(mod.DependencyLevels)
-		slices.Sort(levels)
-		for _, level := range levels {
-			for _, subPkg := range mod.DependencyLevels[level] {
-				if slices.Contains(mod.IndependentSubs, subPkg) {
-					continue
-				}
-				inCount := len(mod.InternalUsers[subPkg])
-				outCount := len(mod.DependenciesOf[subPkg])
-				out = append(out, fmt.Sprintf(template, level, subPkg, outCount, inCount))
+	maxLength := getMaxLength(mod.DependencyPackages())
+	template := fmt.Sprintf("\tL%%d: %%-%ds %%2d | %%d", maxLength)
+	template2 := fmt.Sprintf("\t%%%ds | %%s", maxLength+7)
+	levels := dict.Keys(mod.DependencyLevels)
+	slices.Sort(levels)
+	for _, level := range levels {
+		for _, subPkg := range mod.DependencyLevels[level] {
+			if slices.Contains(mod.IndependentSubs, subPkg) {
+				continue
+			}
+			inCount := len(mod.InternalUsers[subPkg])
+			outCount := len(mod.DependenciesOf[subPkg])
+			out = append(out, fmt.Sprintf(template, level, subPkg, outCount, inCount))
+			if mod.ShowDetails {
 				for i := range max(inCount, outCount) {
 					inboundDep, outboundDep := "", ""
 					if i < inCount {
@@ -273,9 +273,9 @@ func (mod DepsModule) String() string {
 	}
 	// Independent subpackages
 	out = append(out, fmt.Sprintf("IndepSubs: %d / %d", indepCount, totalCount))
-	if !mod.IsCompact {
-		if indepCount > 0 {
-			out = append(out, "\t"+strings.Join(mod.IndependentSubs, " "))
+	if indepCount > 0 {
+		for _, indep := range mod.IndependentSubs {
+			out = append(out, "\t"+indep)
 		}
 	}
 	return strings.Join(out, "\n")

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"unicode"
 
 	"github.com/roidaradal/fn/lang"
 	"github.com/roidaradal/fn/list"
@@ -138,4 +139,27 @@ func runConcurrent[T, D any](items []T, cfg *taskConfig[T, D]) error {
 // Sort CountEntries by descending order of counts
 func sortDescCount(a, b CountEntry) int {
 	return cmp.Compare(b.Value, a.Value)
+}
+
+// Get indentation string
+func getIndentation(rawText string) string {
+	suffix := strings.TrimLeftFunc(rawText, unicode.IsSpace)
+	return strings.TrimSuffix(rawText, suffix)
+}
+
+// Get trailing whitespace
+func getTrailingWhitespace(rawText string) string {
+	prefix := strings.TrimRightFunc(rawText, unicode.IsSpace)
+	return strings.TrimPrefix(rawText, prefix)
+}
+
+// TODO: replace with str.Center string
+func strCenter(text string, width int) string {
+	padCount := width - len(text)
+	if padCount <= 0 {
+		return text
+	}
+	pad1 := padCount / 2
+	pad2 := padCount - pad1
+	return fmt.Sprintf("%s%s%s", strings.Repeat(" ", pad2), text, strings.Repeat(" ", pad1))
 }

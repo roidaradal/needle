@@ -9,7 +9,7 @@ import (
 	"github.com/roidaradal/needle/internal/needle"
 )
 
-const usage string = "Usage: needle <deps|stats> <path> (--compact)"
+const usage string = "Usage: needle <deps|stats|code> <path> (--details)"
 
 func main() {
 	cfg := getArgs()
@@ -22,6 +22,12 @@ func main() {
 		fmt.Println(mod)
 	case "stats":
 		mod, err := needle.NewStatsModule(cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(mod)
+	case "code":
+		mod, err := needle.NewCodeModule(cfg)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -39,8 +45,8 @@ func getArgs() *needle.Config {
 	}
 	option, path := args[0], args[1]
 	return &needle.Config{
-		Option:    option,
-		Path:      path,
-		IsCompact: slices.Contains(args, "--compact"),
+		Option:      option,
+		Path:        path,
+		ShowDetails: slices.Contains(args, "--details"),
 	}
 }

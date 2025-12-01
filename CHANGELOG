@@ -1,9 +1,5 @@
 TODO:
 - code:
-    - Categorize line: code, head, space, comment
-    - Breakdown code: actual vs error handling:
-        - if err != nil
-        - endswith ; err != nil
     - Composition Analysis:
         - Count functions: public, private, methods
         - Count types: struct, interface, alias 
@@ -16,8 +12,15 @@ TODO:
     - graphs/charts of module stats
 BUGFIX:
     - Add help and usage info
-    - Wrapping of indented list of subpackages that depend on extPkg (one-liner wraps poorly)
 ###############################################################
+v0.1.9 - Code Analysis 
+    x Commit: 2025-12-01 16:54
+    x Categorize line: code, error, head, space, comment 
+    x Per package: list files x part breakdown
+        x Line Breakdown 
+        x Chars Breakdown
+    x Table view
+    x Change Deps and Stats option to --details
 v0.1.8 - File Analysis 
     x Commit: 2025-12-01 11:42
     x Categorize package: library vs main 

@@ -18,7 +18,7 @@ func baseModule(cfg *Config) (*Module, error) {
 	if err != nil {
 		return nil, err
 	}
-	mod.IsCompact = cfg.IsCompact
+	mod.ShowDetails = cfg.ShowDetails
 
 	decorators := []func(*Module) error{
 		readGoModFile,
@@ -141,15 +141,13 @@ func (mod Module) String() string {
 		fmt.Sprintf("Name: %s", mod.Name),
 	}
 	out = append(out, fmt.Sprintf("Tree: %d / %d", mod.CountValidNodes(), len(mod.Tree)))
-	if !mod.IsCompact {
-		keys := dict.Keys(mod.Tree)
-		slices.Sort(keys)
-		maxLength := getMaxLength(keys)
-		template := fmt.Sprintf("\t%%-%ds : %%s", maxLength)
-		for _, key := range keys {
-			line := fmt.Sprintf(template, key, mod.Tree[key])
-			out = append(out, line)
-		}
+	keys := dict.Keys(mod.Tree)
+	slices.Sort(keys)
+	maxLength := getMaxLength(keys)
+	template := fmt.Sprintf("\t%%-%ds : %%s", maxLength)
+	for _, key := range keys {
+		line := fmt.Sprintf(template, key, mod.Tree[key])
+		out = append(out, line)
 	}
 	return strings.Join(out, "\n")
 }

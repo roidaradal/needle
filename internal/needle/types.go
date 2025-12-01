@@ -8,9 +8,9 @@ import (
 
 // Config object
 type Config struct {
-	Option    string
-	Path      string
-	IsCompact bool
+	Option      string
+	Path        string
+	ShowDetails bool
 }
 
 // File system folder
@@ -34,7 +34,7 @@ func (n Node) String() string {
 
 // Go module
 type Module struct {
-	IsCompact    bool
+	ShowDetails  bool
 	Path         string           // Go module path in filesystem
 	Name         string           // Go module name
 	Tree         map[string]*Node // Mapping of subfolders to Node inside Go module
@@ -91,6 +91,23 @@ func newStatsModule(mod *Module) *StatsModule {
 	}
 }
 
+// Code Module
+type CodeModule struct {
+	*Module
+	Packages []*Package
+}
+
+// Create new CodeModule
+func newCodeModule(mod *Module) *CodeModule {
+	if mod == nil {
+		mod = newModule()
+	}
+	return &CodeModule{
+		Module:   mod,
+		Packages: make([]*Package, 0),
+	}
+}
+
 type (
 	PackageType string
 	FileType    string
@@ -103,6 +120,7 @@ const (
 	FILE_CODE    FileType    = "code"
 	FILE_TEST    FileType    = "test"
 	LINE_CODE    LineType    = "code"
+	LINE_ERROR   LineType    = "error"
 	LINE_HEAD    LineType    = "head"
 	LINE_SPACE   LineType    = "space"
 	LINE_COMMENT LineType    = "comment"
