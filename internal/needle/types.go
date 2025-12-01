@@ -6,6 +6,13 @@ import (
 	"github.com/roidaradal/fn/dict"
 )
 
+// Config object
+type Config struct {
+	Option    string
+	Path      string
+	IsCompact bool
+}
+
 // File system folder
 type Node struct {
 	Folders []string
@@ -27,6 +34,7 @@ func (n Node) String() string {
 
 // Go module
 type Module struct {
+	IsCompact    bool
 	Path         string           // Go module path in filesystem
 	Name         string           // Go module name
 	Tree         map[string]*Node // Mapping of subfolders to Node inside Go module

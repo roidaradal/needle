@@ -6,9 +6,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/roidaradal/fn/io"
 	"github.com/roidaradal/fn/lang"
 	"github.com/roidaradal/fn/list"
+	"github.com/roidaradal/fn/number"
 	"github.com/roidaradal/fn/str"
 	"golang.org/x/sync/errgroup"
 )
@@ -95,7 +95,7 @@ func getMaxLength(items []string) int {
 
 // Return percentage string
 func percentage(num, denom int) string {
-	ratio := float64(num) * 100 / float64(denom)
+	ratio := number.Ratio(num*100, denom)
 	return fmt.Sprintf("%.0f%%", ratio)
 }
 
@@ -133,15 +133,6 @@ func runConcurrent[T, D any](items []T, cfg *taskConfig[T, D]) error {
 		cfg.Receive(result)
 	}
 	return finalErr
-}
-
-// TODO: replace with io.ReadRawLines
-func ioReadRawLines(path string) ([]string, error) {
-	text, err := io.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return strings.Split(text, "\n"), nil
 }
 
 // Sort CountEntries by descending order of counts

@@ -13,11 +13,12 @@ import (
 )
 
 // Create Module object for Go module at path
-func baseModule(path string) (*Module, error) {
-	mod, err := newModuleAt(path)
+func baseModule(cfg *Config) (*Module, error) {
+	mod, err := newModuleAt(cfg.Path)
 	if err != nil {
 		return nil, err
 	}
+	mod.IsCompact = cfg.IsCompact
 
 	decorators := []func(*Module) error{
 		readGoModFile,
@@ -140,13 +141,15 @@ func (mod Module) String() string {
 		fmt.Sprintf("Name: %s", mod.Name),
 	}
 	out = append(out, fmt.Sprintf("Tree: %d / %d", mod.CountValidNodes(), len(mod.Tree)))
-	keys := dict.Keys(mod.Tree)
-	slices.Sort(keys)
-	maxLength := getMaxLength(keys)
-	template := fmt.Sprintf("\t%%-%ds : %%s", maxLength)
-	for _, key := range keys {
-		line := fmt.Sprintf(template, key, mod.Tree[key])
-		out = append(out, line)
+	if !mod.IsCompact {
+		keys := dict.Keys(mod.Tree)
+		slices.Sort(keys)
+		maxLength := getMaxLength(keys)
+		template := fmt.Sprintf("\t%%-%ds : %%s", maxLength)
+		for _, key := range keys {
+			line := fmt.Sprintf(template, key, mod.Tree[key])
+			out = append(out, line)
+		}
 	}
 	return strings.Join(out, "\n")
 }

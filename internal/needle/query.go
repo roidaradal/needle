@@ -66,3 +66,44 @@ func (pkg *Package) FileNames() []string {
 		return f.Name
 	})
 }
+
+// Count library packages in Module
+func (mod StatsModule) CountLibPackages() int {
+	return len(list.Filter(mod.Packages, func(pkg *Package) bool {
+		return pkg.Type == PKG_LIB
+	}))
+}
+
+// Count main packages in Module
+func (mod StatsModule) CountMainPackages() int {
+	return len(list.Filter(mod.Packages, func(pkg *Package) bool {
+		return pkg.Type == PKG_MAIN
+	}))
+}
+
+// Count total chars in module packages
+func (mod StatsModule) CountChars() int {
+	return list.Sum(list.Map(mod.Packages, (*Package).CountChars))
+}
+
+// Count module total chars from package test files
+func (mod StatsModule) CountTestChars() int {
+	return list.Sum(list.Map(mod.Packages, (*Package).CountTestChars))
+}
+
+// Count total chars in package files
+func (pkg *Package) CountChars() int {
+	return list.Sum(list.Map(pkg.Files, (*File).CountChars))
+}
+
+// Count package total chars from test files
+func (pkg *Package) CountTestChars() int {
+	return list.Sum(list.Map(pkg.TestFiles(), (*File).CountChars))
+}
+
+// Count total chars in file
+func (f *File) CountChars() int {
+	return list.Sum(list.Map(f.Lines, func(line *Line) int {
+		return line.Length
+	}))
+}

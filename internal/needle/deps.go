@@ -14,9 +14,9 @@ import (
 )
 
 // Build new DepsModule for Go module at path
-func NewDepsModule(path string) (*DepsModule, error) {
+func NewDepsModule(cfg *Config) (*DepsModule, error) {
 	// Initialize deps module
-	baseMod, err := baseModule(path)
+	baseMod, err := baseModule(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func computeDependencyLevels(mod *DepsModule) error {
 	outbound := mod.DependenciesOf // list of subpackages it uses
 
 	// Compute independent subpackages
-	q := ds.NewQueue[string](len(outbound))
+	q := ds.NewQueue[string]()
 	for subPkg := range outbound {
 		// Independent subpackage = no inbound & outbound
 		if len(inbound[subPkg]) == 0 && len(outbound[subPkg]) == 0 {
@@ -226,15 +226,17 @@ func (mod DepsModule) String() string {
 	out := []string{mod.Module.String()}
 	// External dependencies
 	out = append(out, fmt.Sprintf("ExtDeps: %d", len(mod.ExternalDeps)))
-	entries := dict.Entries(mod.ExternalUsers)
-	slices.SortFunc(entries, func(a, b dict.Entry[string, []string]) int {
-		// Sort by descending order of dependent counts
-		return cmp.Compare(len(b.Value), len(a.Value))
-	})
-	for _, entry := range entries {
-		extPkg, users := entry.Tuple()
-		out = append(out, fmt.Sprintf("\t%d : %s", len(users), extPkg))
-		out = append(out, "\t\t"+strings.Join(users, " "))
+	if !mod.IsCompact {
+		entries := dict.Entries(mod.ExternalUsers)
+		slices.SortFunc(entries, func(a, b dict.Entry[string, []string]) int {
+			// Sort by descending order of dependent counts
+			return cmp.Compare(len(b.Value), len(a.Value))
+		})
+		for _, entry := range entries {
+			extPkg, users := entry.Tuple()
+			out = append(out, fmt.Sprintf("\t%d : %s", len(users), extPkg))
+			out = append(out, "\t\t"+strings.Join(users, " "))
+		}
 	}
 	// Compute dependent, independent counts
 	totalCount := mod.CountValidNodes()
@@ -242,35 +244,39 @@ func (mod DepsModule) String() string {
 	depCount := totalCount - indepCount
 	// Dependency Tree
 	out = append(out, fmt.Sprintf("DepSubs: %d / %d", depCount, totalCount))
-	maxLength := getMaxLength(mod.DependencyPackages())
-	template := fmt.Sprintf("\tL%%d: %%-%ds %%2d | %%d", maxLength)
-	template2 := fmt.Sprintf("\t%%%ds | %%s", maxLength+7)
-	levels := dict.Keys(mod.DependencyLevels)
-	slices.Sort(levels)
-	for _, level := range levels {
-		for _, subPkg := range mod.DependencyLevels[level] {
-			if slices.Contains(mod.IndependentSubs, subPkg) {
-				continue
-			}
-			inCount := len(mod.InternalUsers[subPkg])
-			outCount := len(mod.DependenciesOf[subPkg])
-			out = append(out, fmt.Sprintf(template, level, subPkg, outCount, inCount))
-			for i := range max(inCount, outCount) {
-				inboundDep, outboundDep := "", ""
-				if i < inCount {
-					inboundDep = "-> " + mod.InternalUsers[subPkg][i]
+	if !mod.IsCompact {
+		maxLength := getMaxLength(mod.DependencyPackages())
+		template := fmt.Sprintf("\tL%%d: %%-%ds %%2d | %%d", maxLength)
+		template2 := fmt.Sprintf("\t%%%ds | %%s", maxLength+7)
+		levels := dict.Keys(mod.DependencyLevels)
+		slices.Sort(levels)
+		for _, level := range levels {
+			for _, subPkg := range mod.DependencyLevels[level] {
+				if slices.Contains(mod.IndependentSubs, subPkg) {
+					continue
 				}
-				if i < outCount {
-					outboundDep = mod.DependenciesOf[subPkg][i] + " <-"
+				inCount := len(mod.InternalUsers[subPkg])
+				outCount := len(mod.DependenciesOf[subPkg])
+				out = append(out, fmt.Sprintf(template, level, subPkg, outCount, inCount))
+				for i := range max(inCount, outCount) {
+					inboundDep, outboundDep := "", ""
+					if i < inCount {
+						inboundDep = "-> " + mod.InternalUsers[subPkg][i]
+					}
+					if i < outCount {
+						outboundDep = mod.DependenciesOf[subPkg][i] + " <-"
+					}
+					out = append(out, fmt.Sprintf(template2, outboundDep, inboundDep))
 				}
-				out = append(out, fmt.Sprintf(template2, outboundDep, inboundDep))
 			}
 		}
 	}
 	// Independent subpackages
 	out = append(out, fmt.Sprintf("IndepSubs: %d / %d", indepCount, totalCount))
-	if indepCount > 0 {
-		out = append(out, "\t"+strings.Join(mod.IndependentSubs, " "))
+	if !mod.IsCompact {
+		if indepCount > 0 {
+			out = append(out, "\t"+strings.Join(mod.IndependentSubs, " "))
+		}
 	}
 	return strings.Join(out, "\n")
 }

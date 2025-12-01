@@ -1,21 +1,31 @@
 TODO:
+- code:
+    - Categorize line: code, head, space, comment
+    - Breakdown code: actual vs error handling:
+        - if err != nil
+        - endswith ; err != nil
+    - Composition Analysis:
+        - Count functions: public, private, methods
+        - Count types: struct, interface, alias 
+        - Package consts and variables
+        - Ratios of Code Line usage: function, types, package vars
 - api:
     -  Generate package public APIs (list)
 - viz:
     - graphical representation of dependencies 
     - graphs/charts of module stats
-- stats:
-    - Categorize package: library vs main 
-    - Categorize line: code, head, space, comment
-    - Breakdown code: actual vs error handling:
-        - if err != nil
-        - endswith ; err != nil
-    - Count functions: public, private, methods
-    - Count types: struct, interface, alias 
-    - Package consts and variables
-    - Ratios of Code Line usage: function, types, package vars
-- Add help and usage info
+BUGFIX:
+    - Add help and usage info
+    - Wrapping of indented list of subpackages that depend on extPkg (one-liner wraps poorly)
 ###############################################################
+v0.1.8 - File Analysis 
+    x Commit: 2025-12-01 11:42
+    x Categorize package: library vs main 
+    x Deps, Stats: compact option
+    x Per package: list files x chars count per file 
+        x per file: avg chars per line 
+        x per pkg : avg chars per file
+        x stats for Code vs Test files, if module has test files
 v0.1.7 - StatsModule 
     x Commit: 2025-11-28 16:08
     x DepsModule, StatsModule concurrency
