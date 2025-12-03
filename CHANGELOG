@@ -1,18 +1,22 @@
 TODO:
-- code:
-    - Composition Analysis:
-        - Count functions: public, private, methods
-        - Count types: struct, interface, alias 
-        - Package consts and variables
-        - Ratios of Code Line usage: function, types, package vars
-- api:
-    -  Generate package public APIs (list)
-- viz:
-    - graphical representation of dependencies 
-    - graphs/charts of module stats
-BUGFIX:
-    - Add help and usage info
+    - Refactor repetitive table display in code
+    - api:
+        - Generate package public APIs (list)
+        - Consider function headers that span multiple lines
+        - Get documentation from comments
+        - Produce Markdown file
+    - viz:
+        - graphical representation of dependencies 
+        - graphs/charts of module stats
 ###############################################################
+v0.1.10 - Composition Analysis 
+    x Commit: 2025-12-03 16:34
+    x Classify LINE_CODEs:
+        x Functions: Function, Method x [Public, Private]
+        x Types: Struct, Interface, Alias x [Public, Private]
+        x Globals: [Consts, Variables] x [Public, Private] (4 types)
+        x Consider type blocks and const/var blocks ()
+    x Ratios of LINE_CODE usage: functions, types, globals
 v0.1.9 - Code Analysis 
     x Commit: 2025-12-01 16:54
     x Categorize line: code, error, head, space, comment 

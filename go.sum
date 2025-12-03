@@ -1,9 +1,11 @@
-github.com/roidaradal/fn v0.5.3 h1:RoREbKWS+DBDb/rDRL1rHD14H82b/5a/J7HiGXLO4Fo=
-github.com/roidaradal/fn v0.5.3/go.mod h1:DFJSkhm8DbM6JcH+TEvTwbtmMbJ+bleFhHowiZ+8oBA=
-github.com/roidaradal/fn v0.5.4 h1:9sJGTOzX3rX/HbeGhFG/SLJypu6E9SI8tXee6CTW8N4=
-github.com/roidaradal/fn v0.5.4/go.mod h1:DFJSkhm8DbM6JcH+TEvTwbtmMbJ+bleFhHowiZ+8oBA=
-github.com/roidaradal/fn v0.5.5 h1:hpy+v2J/XGkFS5h6Eo45Pi3oC96VwhTnlLPdbsnsPO0=
-github.com/roidaradal/fn v0.5.5/go.mod h1:DFJSkhm8DbM6JcH+TEvTwbtmMbJ+bleFhHowiZ+8oBA=
+github.com/roidaradal/fn v0.5.9 h1:iFLxwdHXfDgGMPr2m1jLlT2kWi12IA1APZbI5oOZb7c=
+github.com/roidaradal/fn v0.5.9/go.mod h1:8XYFZDFZpHLXWIXznlsH4o0kmezvKjnF6eJD0dyuqJI=
+github.com/roidaradal/fn v0.5.10 h1:/26sbC/G1UKmbBccrY729xGTs5VF/qVMgkB1aOlzpSI=
+github.com/roidaradal/fn v0.5.10/go.mod h1:8XYFZDFZpHLXWIXznlsH4o0kmezvKjnF6eJD0dyuqJI=
+github.com/roidaradal/fn v0.5.11 h1:RBr/Mp0VqHuVpLJDB9K/ATnFvNKwR5ldVkR+njspqVA=
+github.com/roidaradal/fn v0.5.11/go.mod h1:8XYFZDFZpHLXWIXznlsH4o0kmezvKjnF6eJD0dyuqJI=
+github.com/roidaradal/fn v0.5.12 h1:dTrNyOkCsVjplGsfXMucAXlJs2DsElkQ7mm59ZCDq8Y=
+github.com/roidaradal/fn v0.5.12/go.mod h1:8XYFZDFZpHLXWIXznlsH4o0kmezvKjnF6eJD0dyuqJI=
 golang.org/x/sync v0.18.0 h1:kr88TuHDroi+UVf+0hZnirlk8o8T+4MrK6mr60WkH/I=
 golang.org/x/sync v0.18.0/go.mod h1:9KTHXmSnoGruLpwFjVSX0lNNA75CykiMECbovNTZqGI=
 golang.org/x/text v0.31.0 h1:aC8ghyu4JhP8VojJ2lEHBnochRno1sgL6nEi9WGFGMM=

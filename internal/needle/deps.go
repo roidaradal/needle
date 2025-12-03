@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/roidaradal/fn/conk"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/ds"
 	"github.com/roidaradal/fn/io"
@@ -42,24 +43,22 @@ func externalDependencies(mod *DepsModule) error {
 	}
 
 	// Run concurrently
-	cfg := &taskConfig[TreeEntry, data]{
-		Task: func(entry TreeEntry) (data, error) {
-			var d data
-			folder, node := entry.Tuple()
-			extDeps, err := packageDependencies(mod.Module, folder, node.Files, false)
-			if err != nil {
-				return d, err
-			}
-			return data{folder, extDeps}, nil
-		},
-		Receive: func(d data) {
-			for _, extPkg := range d.extDeps {
-				mod.ExternalUsers[extPkg] = append(mod.ExternalUsers[extPkg], d.folder)
-			}
-		},
+	task := func(entry TreeEntry) (data, error) {
+		var d data
+		folder, node := entry.Tuple()
+		extDeps, err := packageDependencies(mod.Module, folder, node.Files, false)
+		if err != nil {
+			return d, err
+		}
+		return data{folder, extDeps}, nil
+	}
+	onReceive := func(d data) {
+		for _, extPkg := range d.extDeps {
+			mod.ExternalUsers[extPkg] = append(mod.ExternalUsers[extPkg], d.folder)
+		}
 	}
 	entries := mod.ValidTreeEntries()
-	err := runConcurrent(entries, cfg)
+	err := conk.Tasks(entries, task, onReceive)
 	if err != nil {
 		return err
 	}
@@ -77,22 +76,20 @@ func internalDependencies(mod *DepsModule) error {
 	}
 
 	// Run concurrently
-	cfg := &taskConfig[TreeEntry, data]{
-		Task: func(entry TreeEntry) (data, error) {
-			var d data
-			folder, node := entry.Tuple()
-			subDeps, err := packageDependencies(mod.Module, folder, node.Files, true)
-			if err != nil {
-				return d, err
-			}
-			return data{folder, subDeps}, nil
-		},
-		Receive: func(d data) {
-			mod.DependenciesOf[d.folder] = d.subDeps
-		},
+	task := func(entry TreeEntry) (data, error) {
+		var d data
+		folder, node := entry.Tuple()
+		subDeps, err := packageDependencies(mod.Module, folder, node.Files, true)
+		if err != nil {
+			return d, err
+		}
+		return data{folder, subDeps}, nil
+	}
+	onReceive := func(d data) {
+		mod.DependenciesOf[d.folder] = d.subDeps
 	}
 	entries := mod.ValidTreeEntries()
-	err := runConcurrent(entries, cfg)
+	err := conk.Tasks(entries, task, onReceive)
 	if err != nil {
 		return err
 	}
@@ -153,16 +150,14 @@ func packageDependencies(mod *Module, path string, files []string, isInternal bo
 	pkgDeps := ds.NewSet[string]()
 
 	// Run concurrently
-	cfg := &taskConfig[string, []string]{
-		Task: func(filename string) ([]string, error) {
-			path := fmt.Sprintf("%s/%s", rootFolder, filename)
-			return fileDependencies(mod, path, isInternal)
-		},
-		Receive: func(deps []string) {
-			pkgDeps.AddItems(deps)
-		},
+	task := func(filename string) ([]string, error) {
+		path := fmt.Sprintf("%s/%s", rootFolder, filename)
+		return fileDependencies(mod, path, isInternal)
 	}
-	err := runConcurrent(files, cfg)
+	onReceive := func(deps []string) {
+		pkgDeps.AddItems(deps)
+	}
+	err := conk.Tasks(files, task, onReceive)
 	if err != nil {
 		return nil, err
 	}

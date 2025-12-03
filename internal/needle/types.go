@@ -112,6 +112,8 @@ type (
 	PackageType string
 	FileType    string
 	LineType    string
+	CodeType    string
+	BlockType   string
 )
 
 const (
@@ -138,10 +140,13 @@ type File struct {
 	Name  string
 	Type  FileType
 	Lines []*Line
+	Block map[BlockType]int
+	Code  map[CodeType]int
 }
 
 // Line object
 type Line struct {
+	CodeType
 	Type   LineType
 	Length int // numChars
 }
@@ -159,4 +164,29 @@ func (f File) GetCode() string {
 type (
 	TreeEntry  = dict.Entry[string, *Node]
 	CountEntry = dict.Entry[string, int]
+)
+
+const (
+	NOT_CODE       CodeType = "not_code"
+	CODE_GROUP     CodeType = "group"
+	PUB_FUNCTION   CodeType = "pub_function"
+	PRIV_FUNCTION  CodeType = "priv_function"
+	PUB_METHOD     CodeType = "pub_method"
+	PRIV_METHOD    CodeType = "priv_method"
+	PUB_STRUCT     CodeType = "pub_struct"
+	PRIV_STRUCT    CodeType = "priv_struct"
+	PUB_INTERFACE  CodeType = "pub_interface"
+	PRIV_INTERFACE CodeType = "priv_interface"
+	PUB_ALIAS      CodeType = "pub_alias"
+	PRIV_ALIAS     CodeType = "priv_alias"
+	PUB_CONST      CodeType = "pub_const"
+	PRIV_CONST     CodeType = "priv_const"
+	PUB_VAR        CodeType = "pub_var"
+	PRIV_VAR       CodeType = "priv_var"
+)
+
+const (
+	CODE_FUNCTION BlockType = "function"
+	CODE_TYPE     BlockType = "type"
+	CODE_GLOBAL   BlockType = "global"
 )

@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"unicode"
 
 	"github.com/roidaradal/fn/lang"
 	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/fn/number"
 	"github.com/roidaradal/fn/str"
-	"golang.org/x/sync/errgroup"
 )
 
 // Check if line ends with // indirect
@@ -100,66 +98,61 @@ func percentage(num, denom int) string {
 	return fmt.Sprintf("%.0f%%", ratio)
 }
 
-// Config for concurrent tasks
-type taskConfig[T, D any] struct {
-	Task    func(T) (D, error)
-	Receive func(D)
-}
-
-// Run concurrent task for each item
-func runConcurrent[T, D any](items []T, cfg *taskConfig[T, D]) error {
-	// Run goroutine for each item
-	var eg errgroup.Group
-	dataCh := make(chan D, len(items))
-	for _, item := range items {
-		eg.Go(func() error {
-			result, err := cfg.Task(item)
-			if err != nil {
-				return err
-			}
-			dataCh <- result
-			return nil
-		})
-	}
-
-	// Wait for errgroup and close data channel
-	var finalErr error
-	go func() {
-		finalErr = eg.Wait()
-		close(dataCh)
-	}()
-
-	// Receive data from data channel
-	for result := range dataCh {
-		cfg.Receive(result)
-	}
-	return finalErr
-}
-
 // Sort CountEntries by descending order of counts
 func sortDescCount(a, b CountEntry) int {
 	return cmp.Compare(b.Value, a.Value)
 }
 
-// Get indentation string
-func getIndentation(rawText string) string {
-	suffix := strings.TrimLeftFunc(rawText, unicode.IsSpace)
-	return strings.TrimSuffix(rawText, suffix)
+// Create breakdown header
+func breakdownHeader() string {
+	return fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s",
+		str.Center("Code", 8),
+		str.Center("Error", 8),
+		str.Center("Head", 8),
+		str.Center("Comment", 8),
+		str.Center("Space", 8),
+		str.Center("Total", 10),
+		str.Center("Packages", 20),
+	)
 }
 
-// Get trailing whitespace
-func getTrailingWhitespace(rawText string) string {
-	prefix := strings.TrimRightFunc(rawText, unicode.IsSpace)
-	return strings.TrimPrefix(rawText, prefix)
+// Create breakdown row
+func breakdownRow(code, err, head, comment, space, total int, pkg string) string {
+	return fmt.Sprintf("%8s|%8s|%8s|%8s|%8s|%10s| %s",
+		number.Comma(code),
+		number.Comma(err),
+		number.Comma(head),
+		number.Comma(comment),
+		number.Comma(space),
+		number.Comma(total),
+		pkg,
+	)
 }
 
-// TODO: replace with str.Center string
-func strCenter(text string, width int) string {
-	padCount := width - len(text)
-	if padCount <= 0 {
-		return text
+// Create breakdown percentage with 1 value
+func breakdownRowString(code, err, head, comment, space, total, pkg string) string {
+	return fmt.Sprintf("%8s|%8s|%8s|%8s|%8s|%10s| %s",
+		code,
+		err,
+		head,
+		comment,
+		space,
+		total,
+		pkg,
+	)
+}
+
+// Create percentage details
+func percentDetails(num, denom1, denom2 int) string {
+	if num == 0 {
+		return ""
 	}
-	pad1 := padCount / 2
-	pad2 := padCount - pad1
-	return fmt.Sprintf("%s%s%s", strings.Repeat(" ", pad2), text, strings.Repeat(" ", pad1))
+	p1, p2 := "-", "-"
+	if denom1 > 0 {
+		p1 = percentage(num, denom1)
+	}
+	if denom2 > 0 {
+		p2 = percentage(num, denom2)
+	}
+	return fmt.Sprintf("%s,%s", p1, p2)
 }

@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/roidaradal/fn/conk"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/ds"
 	"github.com/roidaradal/fn/io"
@@ -23,17 +24,15 @@ func NewStatsModule(cfg *Config) (*StatsModule, error) {
 	mod := newStatsModule(baseMod)
 
 	// Run concurrently
-	taskCfg := &taskConfig[TreeEntry, *Package]{
-		Task: func(entry TreeEntry) (*Package, error) {
-			folder, node := entry.Tuple()
-			return newPackage(mod.Module, folder, node.Files, newStatsFile)
-		},
-		Receive: func(pkg *Package) {
-			mod.Packages = append(mod.Packages, pkg)
-		},
+	task := func(entry TreeEntry) (*Package, error) {
+		folder, node := entry.Tuple()
+		return newPackage(mod.Module, folder, node.Files, newStatsFile)
+	}
+	onReceive := func(pkg *Package) {
+		mod.Packages = append(mod.Packages, pkg)
 	}
 	entries := mod.ValidTreeEntries()
-	err = runConcurrent(entries, taskCfg)
+	err = conk.Tasks(entries, task, onReceive)
 	if err != nil {
 		return nil, err
 	}
@@ -46,16 +45,14 @@ func newPackage(mod *Module, path string, files []string, newFileFn func(*Packag
 	pkg := &Package{Name: getPackageName(path)}
 
 	// Run concurrently
-	cfg := &taskConfig[string, *File]{
-		Task: func(filename string) (*File, error) {
-			path := fmt.Sprintf("%s/%s", rootFolder, filename)
-			return newFileFn(pkg, path)
-		},
-		Receive: func(file *File) {
-			pkg.Files = append(pkg.Files, file)
-		},
+	task := func(filename string) (*File, error) {
+		path := fmt.Sprintf("%s/%s", rootFolder, filename)
+		return newFileFn(pkg, path)
 	}
-	err := runConcurrent(files, cfg)
+	onReceive := func(file *File) {
+		pkg.Files = append(pkg.Files, file)
+	}
+	err := conk.Tasks(files, task, onReceive)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +62,9 @@ func newPackage(mod *Module, path string, files []string, newFileFn func(*Packag
 // Build File object for StatsModule from file path
 func newStatsFile(pkg *Package, path string) (*File, error) {
 	file := &File{
-		Name: getFilename(path),
-		Type: getFileType(path),
+		Name:  getFilename(path),
+		Type:  getFileType(path),
+		Lines: make([]*Line, 0),
 	}
 	lines, err := io.ReadRawLines(path)
 	if err != nil {
