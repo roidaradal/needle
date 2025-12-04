@@ -1,4 +1,7 @@
 TODO:
+    - Refactor:
+        - Combine the processing of dependencies, stats and codes per file
+          so that we dont reopen the whole codebase multiple times
     - api:
         - Generate package public APIs (list)
         - Consider function headers that span multiple lines
@@ -9,6 +12,10 @@ TODO:
         - graphical representation of dependencies 
         - graphs/charts of module stats
 ###############################################################
+v0.2.1 - Refactor Deps 
+    x Commit: 2025-12-04 16:48
+    x Refactor Deps 
+    x Deps Report
 v0.2.0 - Refactor Module
     x Commit: 2025-12-04 14:01
     x Refactor Module 

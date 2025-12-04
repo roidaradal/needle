@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/ds"
 	"github.com/roidaradal/fn/io"
 	"github.com/roidaradal/fn/list"
@@ -26,8 +27,10 @@ func BuildModule(path string) (*Module, error) {
 
 	// Apply decorator functions to Module
 	decorators := []func(*Module) error{
-		readGoModFile,
-		buildModuleNodes,
+		readGoModFile,           // module
+		buildModuleNodes,        // module
+		modPackageDependencies,  // deps
+		computeDependencyLevels, // deps
 	}
 	for _, decorator := range decorators {
 		err := decorator(mod)
@@ -132,6 +135,16 @@ func buildNode(path string) (*Node, error) {
 		}
 	}
 	return node, nil
+}
+
+// Package node entries: nodes with at least 1 file
+func (mod Module) packageNodeEntries() []NodeEntry {
+	entries := dict.Entries(mod.Nodes)
+	entries = list.Filter(entries, func(e NodeEntry) bool {
+		node := e.Value
+		return len(node.Files) > 0
+	})
+	return entries
 }
 
 // Add external package dependency

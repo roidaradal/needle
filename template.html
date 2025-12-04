@@ -2,18 +2,42 @@
 <html>
 <head>
     <title>Needle | %ModuleName%</title>
+    <style>
+        td {
+            min-width: 6em;
+            padding: 5px;
+        }
+        td.center {
+            text-align: center;
+        }
+    </style>
 </head>
 <body><div id="app">
     <h1>%ModuleName%</h1>
-    <div id="mod">
-        <h2>Module</h2>
-        <h3>Packages: %ModPackageCount%, Files: %ModFileCount%</h3>
-        <ul>%ModuleTree%</ul>
-    </div>
-    <div id="deps">
-        <h2>Dependencies</h2>
+
+    <div id="deps"><h2>Dependencies</h2>
+        <h3>Dependent: %DependentCount% / %ModPackageCount%</h3>
+            <table border="1">
+                <thead>
+                    <th>Level</th>
+                    <th>Package</th>
+                    <th>Out</th>
+                    <th>In</th>
+                    <th>Dependencies</th>
+                    <th>Dependents</th>
+                </thead>
+                <tbody>%DependencyLevels%</tbody>
+            </table>
+        <h3>Independent: %IndependentCount% / %ModPackageCount%</h3>
+            <ul>%IndependentList%</ul>
         <h3>External: %ExternalDepsCount%</h3>
-        <ul>%ExternalDepsList%</ul>
+            <ul>%ExternalDepsList%</ul>
     </div>
+
+    <div id="mod"><h2>Module</h2>
+        <h3>Packages: %ModPackageCount%, Files: %ModFileCount%</h3>
+            <ul>%ModuleTree%</ul>
+    </div>
+
 </div></body>
 </html>

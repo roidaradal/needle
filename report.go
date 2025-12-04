@@ -48,13 +48,11 @@ func addModReport(mod *Module, rep dict.StringMap) {
 	modTree := make([]string, 0)
 	for _, name := range names {
 		node := mod.Nodes[name]
-		modTree = append(modTree, "<li>")
-		modTree = append(modTree, fmt.Sprintf("%s (%d)", name, node.FileCount()))
-		modTree = append(modTree, "<ul>")
-		for _, fileName := range node.Files {
-			modTree = append(modTree, fmt.Sprintf("<li>%s</li>", fileName))
-		}
-		modTree = append(modTree, "</ul></li>")
+		modTree = append(modTree,
+			fmt.Sprintf("<li>(%d) %s<ul>", node.FileCount(), name),
+			listItems(node.Files),
+			"</ul></li>",
+		)
 	}
 	rep["ModPackageCount"] = number.Comma(mod.Stats.PackageCount)
 	rep["ModFileCount"] = number.Comma(mod.Stats.FileCount)

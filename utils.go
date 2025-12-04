@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/fn/str"
 )
 
@@ -24,4 +25,14 @@ func getLinePart(line string, index int) (string, bool) {
 // Join path by /
 func joinPath(path1, path2 string) string {
 	return fmt.Sprintf("%s/%s", path1, path2)
+}
+
+// Wrap string by li tags
+func wrapLiTags(text string) string {
+	return fmt.Sprintf("<li>%s</li>", text)
+}
+
+// Create list items string
+func listItems(items []string) string {
+	return strings.Join(list.Map(items, wrapLiTags), "")
 }

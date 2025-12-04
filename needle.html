@@ -2,18 +2,42 @@
 <html>
 <head>
     <title>Needle | github.com/roidaradal/fn</title>
+    <style>
+        td {
+            min-width: 6em;
+            padding: 5px;
+        }
+        td.center {
+            text-align: center;
+        }
+    </style>
 </head>
 <body><div id="app">
     <h1>github.com/roidaradal/fn</h1>
-    <div id="mod">
-        <h2>Module</h2>
-        <h3>Packages: 14, Files: 37</h3>
-        <ul><li>/check (2)<ul><li>check.go</li><li>struct.go</li></ul></li><li>/clock (4)<ul><li>clock.go</li><li>date.go</li><li>format.go</li><li>time.go</li></ul></li><li>/comb (1)<ul><li>product.go</li></ul></li><li>/conk (1)<ul><li>conk.go</li></ul></li><li>/dict (4)<ul><li>create.go</li><li>dict.go</li><li>sync.go</li><li>types.go</li></ul></li><li>/ds (8)<ul><li>data.go</li><li>dll.go</li><li>ds.go</li><li>graph.go</li><li>lookup.go</li><li>queue.go</li><li>set.go</li><li>stack.go</li></ul></li><li>/dyn (2)<ul><li>dyn.go</li><li>struct.go</li></ul></li><li>/hash (1)<ul><li>hash.go</li></ul></li><li>/io (3)<ul><li>fs.go</li><li>read.go</li><li>write.go</li></ul></li><li>/lang (2)<ul><li>lang.go</li><li>lang_test.go</li></ul></li><li>/list (3)<ul><li>check.go</li><li>fn.go</li><li>list.go</li></ul></li><li>/net (1)<ul><li>fetch.go</li></ul></li><li>/number (1)<ul><li>number.go</li></ul></li><li>/str (4)<ul><li>convert.go</li><li>create.go</li><li>json.go</li><li>str.go</li></ul></li></ul>
-    </div>
-    <div id="deps">
-        <h2>Dependencies</h2>
+
+    <div id="deps"><h2>Dependencies</h2>
+        <h3>Dependent: 5 / 14</h3>
+            <table border="1">
+                <thead>
+                    <th>Level</th>
+                    <th>Package</th>
+                    <th>Out</th>
+                    <th>In</th>
+                    <th>Dependencies</th>
+                    <th>Dependents</th>
+                </thead>
+                <tbody><tr><td class='center'>0</td><td>/list</td><td class='center'>0</td><td class='center'>3</td><td> </td><td>/comb<br/>/ds<br/>/io</td></tr><tr><td class='center'>0</td><td>/str</td><td class='center'>0</td><td class='center'>2</td><td> </td><td>/ds<br/>/io</td></tr><tr><td class='center'>1</td><td>/comb</td><td class='center'>1</td><td class='center'>0</td><td>/list</td><td> </td></tr><tr><td class='center'>1</td><td>/ds</td><td class='center'>2</td><td class='center'>0</td><td>/list<br/>/str</td><td> </td></tr><tr><td class='center'>1</td><td>/io</td><td class='center'>2</td><td class='center'>0</td><td>/list<br/>/str</td><td> </td></tr></tbody>
+            </table>
+        <h3>Independent: 9 / 14</h3>
+            <ul><li>/check</li><li>/clock</li><li>/conk</li><li>/dict</li><li>/dyn</li><li>/hash</li><li>/lang</li><li>/net</li><li>/number</li></ul>
         <h3>External: 4</h3>
-        <ul><li>golang.org/x/crypto</li><li>golang.org/x/text</li><li>golang.org/x/sync</li><li>github.com/go-playground/validator/v10</li></ul>
+            <ul><li>(1) github.com/go-playground/validator/v10<ul><li>/check</li></ul></li><li>(1) golang.org/x/crypto<ul><li>/hash</li></ul></li><li>(1) golang.org/x/sync<ul><li>/conk</li></ul></li><li>(1) golang.org/x/text<ul><li>/number</li></ul></li></ul>
     </div>
+
+    <div id="mod"><h2>Module</h2>
+        <h3>Packages: 14, Files: 37</h3>
+            <ul><li>(2) /check<ul><li>check.go</li><li>struct.go</li></ul></li><li>(4) /clock<ul><li>clock.go</li><li>date.go</li><li>format.go</li><li>time.go</li></ul></li><li>(1) /comb<ul><li>product.go</li></ul></li><li>(1) /conk<ul><li>conk.go</li></ul></li><li>(4) /dict<ul><li>create.go</li><li>dict.go</li><li>sync.go</li><li>types.go</li></ul></li><li>(8) /ds<ul><li>data.go</li><li>dll.go</li><li>ds.go</li><li>graph.go</li><li>lookup.go</li><li>queue.go</li><li>set.go</li><li>stack.go</li></ul></li><li>(2) /dyn<ul><li>dyn.go</li><li>struct.go</li></ul></li><li>(1) /hash<ul><li>hash.go</li></ul></li><li>(3) /io<ul><li>fs.go</li><li>read.go</li><li>write.go</li></ul></li><li>(2) /lang<ul><li>lang.go</li><li>lang_test.go</li></ul></li><li>(3) /list<ul><li>check.go</li><li>fn.go</li><li>list.go</li></ul></li><li>(1) /net<ul><li>fetch.go</li></ul></li><li>(1) /number<ul><li>number.go</li></ul></li><li>(4) /str<ul><li>convert.go</li><li>create.go</li><li>json.go</li><li>str.go</li></ul></li></ul>
+    </div>
+
 </div></body>
 </html>

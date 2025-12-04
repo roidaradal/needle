@@ -42,6 +42,11 @@ func newModule() *Module {
 }
 
 type (
+	NodeEntry  = dict.Entry[string, *Node]
+	CountEntry = dict.Entry[string, int]
+)
+
+type (
 	PackageType string
 	FileType    string
 	LineType    string
