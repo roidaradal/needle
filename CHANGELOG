@@ -1,14 +1,18 @@
 TODO:
-    - Refactor repetitive table display in code
     - api:
         - Generate package public APIs (list)
         - Consider function headers that span multiple lines
         - Get documentation from comments
         - Produce Markdown file
-    - viz:
+    - viz: 
+        - After report is finalized, transfer template.html to a local string variable
         - graphical representation of dependencies 
         - graphs/charts of module stats
 ###############################################################
+v0.2.0 - Refactor Module
+    x Commit: 2025-12-04 14:01
+    x Refactor Module 
+    x Create and open report HTML file
 v0.1.10 - Composition Analysis 
     x Commit: 2025-12-03 16:34
     x Classify LINE_CODEs:

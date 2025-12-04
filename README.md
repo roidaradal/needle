@@ -1,5 +1,7 @@
 # Needle
-Visualizer tool for package dependency tree in a Go module. Creates a directed acyclic graph (DAG) of dependencies.
+Go module analysis tool that shows dependency tree, module statistics, composition, and public API of packages.
+
+The `needle` name comes from the tool's original intention: building a directed acyclic graph (DAG) of internal package dependencies.
 
 DAG of Module ⇒ DAGoM ⇒ Needle
 
@@ -7,4 +9,4 @@ DAG of Module ⇒ DAGoM ⇒ Needle
 `go install github.com/roidaradal/needle@latest`
 
 ## Usage 
-`needle <deps|stats|code> <modulePath> (--details)`
+`needle <modulePath> (<reportPath>)`

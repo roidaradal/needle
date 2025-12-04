@@ -4,49 +4,42 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"slices"
 
-	"github.com/roidaradal/needle/internal/needle"
+	"github.com/roidaradal/fn/io"
 )
 
-const usage string = "Usage: needle <deps|stats|code> <path> (--details)"
-
 func main() {
-	cfg := getArgs()
-	switch cfg.Option {
-	case "deps":
-		mod, err := needle.NewDepsModule(cfg)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(mod)
-	case "stats":
-		mod, err := needle.NewStatsModule(cfg)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(mod)
-	case "code":
-		mod, err := needle.NewCodeModule(cfg)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(mod)
-	default:
-		fmt.Println(usage)
+	modulePath, outputPath := getArgs()
+	mod, err := BuildModule(modulePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = BuildReport(mod, outputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = io.OpenFile(outputPath)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
-func getArgs() *needle.Config {
+// Get module path and output path from command-line args
+func getArgs() (modulePath, outputPath string) {
 	args := os.Args[1:]
-	if len(args) < 2 {
-		fmt.Println(usage)
+	numArgs := len(args)
+	if numArgs < 1 {
+		fmt.Println("Usage: needle <modulePath> (<outputPath>)")
 		os.Exit(1)
 	}
-	option, path := args[0], args[1]
-	return &needle.Config{
-		Option:      option,
-		Path:        path,
-		ShowDetails: slices.Contains(args, "--details"),
+	modulePath = args[0]
+	outputPath = "needle.html"
+	if numArgs >= 2 {
+		outputPath = args[1]
 	}
+	if !endsWith(outputPath, ".html") {
+		fmt.Println("Output path needs to be a .html file")
+		os.Exit(1)
+	}
+	return modulePath, outputPath
 }
