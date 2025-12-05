@@ -29,7 +29,7 @@ func BuildModule(path string) (*Module, error) {
 	decorators := []func(*Module) error{
 		readGoModFile,           // module
 		buildModuleNodes,        // module
-		modPackageDependencies,  // deps
+		buildModuleTree,         // module
 		computeDependencyLevels, // deps
 	}
 	for _, decorator := range decorators {

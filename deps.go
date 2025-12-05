@@ -1,147 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"maps"
-	"path/filepath"
 	"slices"
 	"strings"
 
-	"github.com/roidaradal/fn/conk"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/ds"
-	"github.com/roidaradal/fn/io"
 	"github.com/roidaradal/fn/list"
 )
-
-// Process the internal / external dependencies of each subpackage in the module
-func modPackageDependencies(mod *Module) error {
-	type data struct {
-		name string
-		deps map[string]bool // isInternal
-	}
-
-	// Run concurrently
-	task := func(entry NodeEntry) (data, error) {
-		var d data
-		name, node := entry.Tuple()
-		deps, err := packageDependencies(mod, name, node.Files)
-		if err != nil {
-			return d, err
-		}
-		return data{name, deps}, nil
-	}
-	onReceive := func(d data) {
-		for dep, isInternal := range d.deps {
-			if isInternal {
-				mod.Deps.Of[d.name] = append(mod.Deps.Of[d.name], dep)
-			} else {
-				mod.ExternalUsers[dep] = append(mod.ExternalUsers[dep], d.name)
-			}
-		}
-	}
-	entries := mod.packageNodeEntries()
-	err := conk.Tasks(entries, task, onReceive)
-	if err != nil {
-		return err
-	}
-
-	// Compute inverse dependency => which package uses it
-	mod.Deps.InternalUsers = dict.GroupByValueList(mod.Deps.Of)
-	dict.SortValues(mod.Deps.InternalUsers)
-	dict.SortValues(mod.Deps.ExternalUsers)
-	dict.SortValues(mod.Deps.Of)
-	return nil
-}
-
-// Gather dependency data of files in folder path
-func packageDependencies(mod *Module, path string, files []string) (map[string]bool, error) {
-	folder := mod.Path + path
-	pkgDeps := make(map[string]bool)
-
-	// Run concurrently
-	task := func(filename string) (map[string]bool, error) {
-		path := filepath.Join(folder, filename)
-		return fileDependencies(mod, path)
-	}
-	onReceive := func(deps map[string]bool) {
-		maps.Copy(pkgDeps, deps)
-	}
-	err := conk.Tasks(files, task, onReceive)
-	if err != nil {
-		return nil, err
-	}
-	return pkgDeps, nil
-}
-
-// Get list of dependencies from give file path
-func fileDependencies(mod *Module, path string) (map[string]bool, error) {
-	if !io.PathExists(path) {
-		return nil, fmt.Errorf("file %q does not exist", path)
-	}
-	lines, err := io.ReadNonEmptyLines(path)
-	if err != nil {
-		return nil, err
-	}
-	candidates := make([]string, 0)
-	inDepMode := false
-	for _, line := range lines {
-		if startsWith(line, "import ") {
-			if endsWith(line, "(") {
-				inDepMode = true // toggle DepMode on
-			} else {
-				// single line import
-				if dep, ok := getLinePart(line, 1); ok {
-					candidates = append(candidates, dep)
-				}
-			}
-		} else if inDepMode {
-			if line == ")" {
-				inDepMode = false // toggle DepMode off
-				continue
-			}
-			candidates = append(candidates, line)
-		}
-	}
-	deps := make(map[string]bool)
-	for _, candidate := range candidates {
-		if internalDep, ok := isInternalDependency(mod, candidate); ok {
-			deps[internalDep] = true
-			continue
-		}
-		if externalDep, ok := isExternalDependency(mod, candidate); ok {
-			deps[externalDep] = false
-		}
-	}
-	return deps, nil
-}
-
-// Check if package is internal dependency,
-// return the processed name
-func isInternalDependency(mod *Module, dep string) (string, bool) {
-	dep = strings.Trim(dep, "\"")
-	isInternal := startsWith(dep, mod.Name)
-	if isInternal {
-		dep = strings.TrimPrefix(dep, mod.Name)
-		// TODO: replace with str.GuardWith
-		if dep == "" {
-			dep = "/"
-		}
-	}
-	return dep, isInternal
-}
-
-// Check if package is external dependency,
-// return the processed name
-func isExternalDependency(mod *Module, dep string) (string, bool) {
-	dep = strings.Trim(dep, "\"")
-	for extPkg := range mod.Deps.ExternalUsers {
-		if startsWith(dep, extPkg) {
-			return extPkg, true
-		}
-	}
-	return dep, false
-}
 
 // Process the independent subpackages and dependency levels (dependency DAG)
 func computeDependencyLevels(mod *Module) error {
@@ -189,4 +55,43 @@ func computeDependencyLevels(mod *Module) error {
 	dict.SortValues(mod.Deps.Levels)
 
 	return nil
+}
+
+// Add file dependency
+func (f *File) addDependency(mod *Module, dep string) {
+	if internalDep, ok := isInternalDependency(mod, dep); ok {
+		f.Deps[internalDep] = true
+		return
+	}
+	if externalDep, ok := isExternalDependency(mod, dep); ok {
+		f.Deps[externalDep] = false
+		return
+	}
+}
+
+// Check if package is internal dependency,
+// return the processed name
+func isInternalDependency(mod *Module, dep string) (string, bool) {
+	dep = strings.Trim(dep, "\"")
+	isInternal := startsWith(dep, mod.Name)
+	if isInternal {
+		dep = strings.TrimPrefix(dep, mod.Name)
+		// TODO: replace with str.GuardWith
+		if dep == "" {
+			dep = "/"
+		}
+	}
+	return dep, isInternal
+}
+
+// Check if package is external dependency,
+// return the processed name
+func isExternalDependency(mod *Module, dep string) (string, bool) {
+	dep = strings.Trim(dep, "\"")
+	for extPkg := range mod.Deps.ExternalUsers {
+		if startsWith(dep, extPkg) {
+			return extPkg, true
+		}
+	}
+	return dep, false
 }

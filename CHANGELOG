@@ -12,6 +12,14 @@ TODO:
         - graphical representation of dependencies 
         - graphs/charts of module stats
 ###############################################################
+v0.2.3 - Stats and Code Report 
+    - Commit: 
+    - Stats Report 
+    - Code Report 
+    - Only include relevant CodeTypes (omit 0 counts)
+v0.2.2 - Refactor Code 
+    x Commit: 2025-12-05 10:05
+    x Combine processing of dependencies, stats, and codes 
 v0.2.1 - Refactor Deps 
     x Commit: 2025-12-04 16:48
     x Refactor Deps 

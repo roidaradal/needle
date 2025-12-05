@@ -1,5 +1,7 @@
 github.com/roidaradal/fn v0.5.13 h1:19+WcG+QXWVH/TBcGJILWlzxAsHX0cHvlmpdwsHUWlw=
 github.com/roidaradal/fn v0.5.13/go.mod h1:8XYFZDFZpHLXWIXznlsH4o0kmezvKjnF6eJD0dyuqJI=
+github.com/roidaradal/fn v0.5.14 h1:Tot6Y2Gcf7BTD5A3di0RHSyJ1IW8BensPaaHp9h3Ljk=
+github.com/roidaradal/fn v0.5.14/go.mod h1:8XYFZDFZpHLXWIXznlsH4o0kmezvKjnF6eJD0dyuqJI=
 golang.org/x/sync v0.18.0 h1:kr88TuHDroi+UVf+0hZnirlk8o8T+4MrK6mr60WkH/I=
 golang.org/x/sync v0.18.0/go.mod h1:9KTHXmSnoGruLpwFjVSX0lNNA75CykiMECbovNTZqGI=
 golang.org/x/text v0.31.0 h1:aC8ghyu4JhP8VojJ2lEHBnochRno1sgL6nEi9WGFGMM=

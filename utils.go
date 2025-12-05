@@ -13,10 +13,15 @@ var (
 	endsWith   = strings.HasSuffix
 )
 
-// Split line by space, return part at given index if valid
+// Split line by space, return part at given index if valid.
+// If negative index, gets from the back (-1 is last)
 func getLinePart(line string, index int) (string, bool) {
 	parts := str.SpaceSplit(line)
-	if len(parts) >= index+1 {
+	numParts := len(parts)
+	if index < 0 {
+		index = numParts + index
+	}
+	if numParts >= index+1 {
 		return parts[index], true
 	}
 	return "", false
@@ -35,4 +40,11 @@ func wrapLiTags(text string) string {
 // Create list items string
 func listItems(items []string) string {
 	return strings.Join(list.Map(items, wrapLiTags), "")
+}
+
+// TODO: update with dict.UpdateCounts
+func dictUpdateCounts[K comparable](oldCounter, newCounter map[K]int) {
+	for key, count := range newCounter {
+		oldCounter[key] += count
+	}
 }
