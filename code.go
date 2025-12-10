@@ -32,11 +32,16 @@ func buildModuleTree(mod *Module) error {
 	}
 	onReceive := func(d data) {
 		mod.Packages = append(mod.Packages, d.pkg)
+		mod.LineCount += d.pkg.LineCount
+		mod.CharCount += d.pkg.CharCount
+		dict.UpdateCounts(mod.Stats.Files, d.pkg.FileTypes)
+		dict.UpdateCounts(mod.Stats.FileLines, d.pkg.FileLines)
+		dict.UpdateCounts(mod.Stats.FileChars, d.pkg.FileChars)
 		for dep, isInternal := range d.pkg.Deps {
 			if isInternal {
 				mod.Deps.Of[d.name] = append(mod.Deps.Of[d.name], dep)
 			} else {
-				mod.ExternalUsers[dep] = append(mod.ExternalUsers[dep], d.name)
+				mod.Deps.ExternalUsers[dep] = append(mod.Deps.ExternalUsers[dep], d.name)
 			}
 		}
 	}
@@ -51,6 +56,11 @@ func buildModuleTree(mod *Module) error {
 	dict.SortValues(mod.Deps.InternalUsers)
 	dict.SortValues(mod.Deps.ExternalUsers)
 	dict.SortValues(mod.Deps.Of)
+
+	// Update stats
+	mod.Stats.Packages = dict.CounterFunc(mod.Packages, func(pkg *Package) PackageType {
+		return pkg.Type
+	})
 	return nil
 }
 
@@ -58,11 +68,14 @@ func buildModuleTree(mod *Module) error {
 func newPackage(mod *Module, name string, files []string) (*Package, error) {
 	folder := mod.Path + name
 	pkg := &Package{
-		Name:   str.GuardWith(strings.TrimPrefix(name, "/"), "/"),
-		Files:  make([]*File, 0),
-		Deps:   make(map[string]bool),
-		Blocks: make(map[BlockType]int),
-		Codes:  make(map[CodeType]int),
+		Name:      str.GuardWith(strings.TrimPrefix(name, "/"), "/"),
+		Files:     make([]*File, 0),
+		Deps:      make(map[string]bool),
+		Blocks:    make(dict.Counter[BlockType]),
+		Codes:     make(dict.Counter[CodeType]),
+		FileTypes: make(dict.Counter[FileType]),
+		FileLines: make(dict.Counter[FileType]),
+		FileChars: make(dict.Counter[FileType]),
 	}
 
 	// Run concurrently
@@ -73,14 +86,27 @@ func newPackage(mod *Module, name string, files []string) (*Package, error) {
 	onReceive := func(file *File) {
 		pkg.Files = append(pkg.Files, file)
 		maps.Copy(pkg.Deps, file.Deps)
-		dictUpdateCounts(pkg.Blocks, file.Blocks)
-		dictUpdateCounts(pkg.Codes, file.Codes)
+		dict.UpdateCounts(pkg.Blocks, file.Blocks)
+		dict.UpdateCounts(pkg.Codes, file.Codes)
 	}
 	err := conk.Tasks(files, task, onReceive)
 	if err != nil {
 		return nil, err
 	}
 
+	// Set file type stats
+	pkg.FileTypes = dict.CounterFunc(pkg.Files, func(f *File) FileType {
+		return f.Type
+	})
+	// Set file line stats
+	for _, f := range pkg.Files {
+		numLines := len(f.Lines)
+		pkg.FileLines[f.Type] += numLines
+		pkg.LineCount += numLines
+		numChars := f.CharCount
+		pkg.FileChars[f.Type] += numChars
+		pkg.CharCount += numChars
+	}
 	return pkg, nil
 }
 
@@ -112,8 +138,8 @@ func newFile(mod *Module, pkg *Package, path string) (*File, error) {
 		Type:   lang.Ternary(endsWith(path, "_test.go"), FILE_TEST, FILE_CODE),
 		Lines:  make([]*Line, 0),
 		Deps:   make(map[string]bool),
-		Blocks: make(map[BlockType]int),
-		Codes:  make(map[CodeType]int),
+		Blocks: make(dict.Counter[BlockType]),
+		Codes:  make(dict.Counter[CodeType]),
 	}
 
 	lines, err := io.ReadRawLines(path)
@@ -236,13 +262,13 @@ func newFile(mod *Module, pkg *Package, path string) (*File, error) {
 				if str.TrimRightSpace(rawLine) == modeCloser {
 					line.CodeType = CODE_GROUP
 					currMode = modeNone
-					continue
+				} else {
+					// Inside type group mode
+					codeType = classifyType("type " + cleanLine)
+					line.CodeType = codeType
+					file.Blocks[CODE_TYPE] += 1
+					file.Codes[codeType] += 1
 				}
-				// Inside type group mode
-				codeType = classifyType("type " + cleanLine)
-				line.CodeType = codeType
-				file.Blocks[CODE_TYPE] += 1
-				file.Codes[codeType] += 1
 			} else if startsWith(rawLine, "const ") || startsWith(rawLine, "var ") {
 				// Constant or variable
 				codeType = classifyGlobal(cleanLine)
@@ -259,20 +285,21 @@ func newFile(mod *Module, pkg *Package, path string) (*File, error) {
 				if str.TrimRightSpace(rawLine) == modeCloser {
 					line.CodeType = CODE_GROUP
 					currMode = modeNone
-					continue
+				} else {
+					// Inside global group mode
+					prefix := lang.Ternary(currMode == modeConstGroup, "const ", "var ")
+					codeType = classifyGlobal(prefix + cleanLine)
+					line.CodeType = codeType
+					file.Blocks[CODE_GLOBAL] += 1
+					file.Codes[codeType] += 1
 				}
-				// Inside global group mode
-				prefix := lang.Ternary(currMode == modeConstGroup, "const ", "var ")
-				codeType = classifyGlobal(prefix + cleanLine)
-				line.CodeType = codeType
-				file.Blocks[CODE_GLOBAL] += 1
-				file.Codes[codeType] += 1
 			} else {
 				line.CodeType = NOT_CODE // unknown code type
 			}
 		}
 
 		file.Lines = append(file.Lines, line)
+		file.CharCount += line.Length
 	}
 
 	return file, nil

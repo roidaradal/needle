@@ -149,6 +149,7 @@ func (mod Module) packageNodeEntries() []NodeEntry {
 
 // Add external package dependency
 func (mod *Module) addExternalDependency(extPkg string) {
+	mod.Deps.External = append(mod.Deps.External, extPkg)
 	mod.Deps.ExternalUsers[extPkg] = make([]string, 0)
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/ds"
 	"github.com/roidaradal/fn/list"
+	"github.com/roidaradal/fn/str"
 )
 
 // Process the independent subpackages and dependency levels (dependency DAG)
@@ -75,11 +76,7 @@ func isInternalDependency(mod *Module, dep string) (string, bool) {
 	dep = strings.Trim(dep, "\"")
 	isInternal := startsWith(dep, mod.Name)
 	if isInternal {
-		dep = strings.TrimPrefix(dep, mod.Name)
-		// TODO: replace with str.GuardWith
-		if dep == "" {
-			dep = "/"
-		}
+		dep = str.GuardWith(strings.TrimPrefix(dep, mod.Name), "/")
 	}
 	return dep, isInternal
 }
@@ -88,7 +85,7 @@ func isInternalDependency(mod *Module, dep string) (string, bool) {
 // return the processed name
 func isExternalDependency(mod *Module, dep string) (string, bool) {
 	dep = strings.Trim(dep, "\"")
-	for extPkg := range mod.Deps.ExternalUsers {
+	for _, extPkg := range mod.Deps.External {
 		if startsWith(dep, extPkg) {
 			return extPkg, true
 		}

@@ -28,7 +28,7 @@ func addDepsReport(mod *Module, rep dict.StringMap) {
 	for _, entry := range entries {
 		extPkg, users := entry.Tuple()
 		out = append(out,
-			fmt.Sprintf("<li>(%d) %s<ul>", len(users), extPkg),
+			fmt.Sprintf("<li>(<b>%d</b>) %s<ul>", len(users), extPkg),
 			listItems(users),
 			"</ul></li>",
 		)

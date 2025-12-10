@@ -3,18 +3,105 @@
 <head>
     <title>Needle | %ModuleName%</title>
     <style>
-        td {
+        th, td {
             min-width: 6em;
             padding: 5px;
         }
         td.center {
             text-align: center;
         }
+        td.left {
+            text-align: left;
+        }
+        td.right {
+            text-align: right;
+        }
     </style>
 </head>
 <body><div id="app">
     <h1>%ModuleName%</h1>
 
+    <div id="mod"><h2>Module</h2>
+        <table border="1"><tbody>
+            <tr>
+                <th>Packages</th>
+                <th>%ModPackageCount%</th>
+                <td>Library<br/>%LibPackageCount%</td>
+                <td>Main<br/>%MainPackageCount%</td>
+            </tr>
+            <tr>
+                <th>Files</th>
+                <th>%ModFileCount%</th>
+                <td>Code<br/>%CodeFileCount%<br/>%CodeFileShare%</td>
+                <td>Test<br/>%TestFileCount%<br/>%TestFileShare%</td>
+            </tr>
+            <tr>
+                <th>Lines</th>
+                <th>%ModLineCount%</th>
+                <td>Code<br/>%CodeLineCount%<br/>%CodeLineShare%</td>
+                <td>Test<br/>%TestLineCount%<br/>%TestLineShare%</td>
+            </tr>
+            <tr>
+                <th>AvgLinePerFile</th>
+                <th>%AvgLinePerFile%</th>
+                <td>Code<br/>%CodeALPF%</td>
+                <td>Test<br/>%TestALPF%</td>
+            </tr>
+            <tr>
+                <th>Characters</th>
+                <th>%ModCharCount%</th>
+                <td>Code<br/>%CodeCharCount%<br/>%CodeCharShare%</td>
+                <td>Test<br/>%TestCharCount%<br/>%TestCharShare%</td>
+            </tr>
+            <tr>
+                <th>AvgCharPerFile</th>
+                <th>%AvgCharPerFile%</th>
+                <td>Code<br/>%CodeACPF%</td>
+                <td>Test<br/>%TestACPF%</td>
+            </tr>
+            <tr>
+                <th>AvgCharPerLine</th>
+                <th>%AvgCharPerLine%</th>
+                <td>Code<br/>%CodeACPL%</td>
+                <td>Test<br/>%TestACPL%</td>
+            </tr>
+        </tbody></table>
+
+        <table border="1">
+            <thead><tr>
+                <th>Package</th>
+                <th>%</th>
+                <th>Chars</th>
+                <th>ACPF</th>
+                <th>ACPL</th>
+                <th colspan="3">File Chars</th>
+            </tr></thead>
+            <tbody>%CharsTable%</tbody>
+        </table>
+
+        <table border="1">
+            <thead><tr>
+                <th>Package</th>
+                <th>%</th>
+                <th>Lines</th>
+                <th>ALPF</th>
+                <th colspan="3">File Lines</th>
+            </tr></thead>
+            <tbody>%LinesTable%</tbody>
+        </table>
+        
+        <table border="1">
+            <thead><tr>
+                <th>Package</th>
+                <th>%</th>
+                <th>Files</th>
+                %ModuleTableHeader%
+                <th>List</th>
+            </tr></thead>
+            <tbody>%ModuleTable%</tbody>
+        </table>
+    </div>
+    
     <div id="deps"><h2>Dependencies</h2>
         <h3>Dependent: %DependentCount% / %ModPackageCount%</h3>
             <table border="1">
@@ -32,11 +119,6 @@
             <ul>%IndependentList%</ul>
         <h3>External: %ExternalDepsCount%</h3>
             <ul>%ExternalDepsList%</ul>
-    </div>
-
-    <div id="mod"><h2>Module</h2>
-        <h3>Packages: %ModPackageCount%, Files: %ModFileCount%</h3>
-            <ul>%ModuleTree%</ul>
     </div>
 
 </div></body>

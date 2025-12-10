@@ -1,10 +1,12 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"strings"
 
 	"github.com/roidaradal/fn/list"
+	"github.com/roidaradal/fn/number"
 	"github.com/roidaradal/fn/str"
 )
 
@@ -37,14 +39,56 @@ func wrapLiTags(text string) string {
 	return fmt.Sprintf("<li>%s</li>", text)
 }
 
+// Wrap string by td tags
+func wrapTdTags(text string, class string) string {
+	if class != "" {
+		class = fmt.Sprintf("class=%q", class)
+	}
+	return fmt.Sprintf("<td %s>%s</td>", class, text)
+}
+
+// Wrap string by td tags, with rowspan
+func wrapTdTagsSpan(text string, class string, rowspan int) string {
+	if class != "" {
+		class = fmt.Sprintf("class=%q", class)
+	}
+	return fmt.Sprintf("<td %s rowspan='%d'>%s</td>", class, rowspan, text)
+}
+
 // Create list items string
 func listItems(items []string) string {
 	return strings.Join(list.Map(items, wrapLiTags), "")
 }
 
-// TODO: update with dict.UpdateCounts
-func dictUpdateCounts[K comparable](oldCounter, newCounter map[K]int) {
-	for key, count := range newCounter {
-		oldCounter[key] += count
+// Return percentage string
+func percentage(num, denom int) string {
+	ratio := number.Ratio(num*100, denom)
+	return fmt.Sprintf("%.0f%%", ratio)
+}
+
+// Return average string
+func average(num, denom int) string {
+	if denom == 0 {
+		return "0"
 	}
+	ratio := int(number.Ratio(num, denom))
+	return number.Comma(ratio)
+}
+
+// Sort CountEntries by descending order of counts
+// Tie-breaker: alphabetical
+func sortDescCount(a, b CountEntry) int {
+	score1 := cmp.Compare(b.Value, a.Value)
+	if score1 != 0 {
+		return score1
+	}
+	return cmp.Compare(a.Key, b.Key)
+}
+
+// Convert package name to node name
+func packageToNodeName(name string) string {
+	if !startsWith(name, "/") {
+		name = "/" + name
+	}
+	return name
 }

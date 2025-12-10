@@ -1,6 +1,9 @@
 package main
 
-import "github.com/roidaradal/fn/dict"
+import (
+	"github.com/roidaradal/fn/dict"
+	"github.com/roidaradal/fn/list"
+)
 
 // Go module
 type Module struct {
@@ -18,6 +21,7 @@ type Deps struct {
 	Of            dict.StringListMap // Internal package => list of subpackges it depends on
 	InternalUsers dict.StringListMap // Internal package => list of subpackages that directly use it
 	ExternalUsers dict.StringListMap // External dependency => list of subpackages that directly use it
+	External      []string           // List of external subpackages
 	Independent   []string           // List of independent subpackages (not in dependency DAG)
 	Levels        map[int][]string   // Non-independent subpackage levels (0 = sink)
 }
@@ -26,12 +30,18 @@ type Deps struct {
 type Stats struct {
 	PackageCount int
 	FileCount    int
+	LineCount    int
+	CharCount    int
+	Packages     dict.Counter[PackageType]
+	Files        dict.Counter[FileType]
+	FileLines    dict.Counter[FileType]
+	FileChars    dict.Counter[FileType]
 }
 
 // Code info
 type Code struct {
-	Blocks map[BlockType]int
-	Types  map[CodeType]int
+	Blocks dict.Counter[BlockType]
+	Types  dict.Counter[CodeType]
 }
 
 // Create new Module
@@ -43,14 +53,20 @@ func newModule() *Module {
 			Of:            make(dict.StringListMap),
 			InternalUsers: make(dict.StringListMap),
 			ExternalUsers: make(dict.StringListMap),
+			External:      make([]string, 0),
 			Independent:   make([]string, 0),
 			Levels:        make(map[int][]string),
 		},
 		Code: Code{
-			Blocks: make(map[BlockType]int),
-			Types:  make(map[CodeType]int),
+			Blocks: make(dict.Counter[BlockType]),
+			Types:  make(dict.Counter[CodeType]),
 		},
-		Stats: Stats{},
+		Stats: Stats{
+			Packages:  make(dict.Counter[PackageType]),
+			Files:     make(dict.Counter[FileType]),
+			FileLines: make(dict.Counter[FileType]),
+			FileChars: make(dict.Counter[FileType]),
+		},
 	}
 }
 
@@ -129,22 +145,28 @@ func (n Node) FileCount() int {
 
 // Go Package object
 type Package struct {
-	Name   string
-	Type   PackageType
-	Files  []*File
-	Deps   map[string]bool // dependency => isInternal
-	Blocks map[BlockType]int
-	Codes  map[CodeType]int
+	Name      string
+	Type      PackageType
+	Files     []*File
+	Deps      map[string]bool // dependency => isInternal
+	Blocks    dict.Counter[BlockType]
+	Codes     dict.Counter[CodeType]
+	FileTypes dict.Counter[FileType]
+	FileLines dict.Counter[FileType]
+	FileChars dict.Counter[FileType]
+	LineCount int
+	CharCount int
 }
 
 // Go File object
 type File struct {
-	Name   string
-	Type   FileType
-	Lines  []*Line
-	Deps   map[string]bool // dependency => isInternal
-	Blocks map[BlockType]int
-	Codes  map[CodeType]int
+	Name      string
+	Type      FileType
+	Lines     []*Line
+	Deps      map[string]bool // dependency => isInternal
+	Blocks    dict.Counter[BlockType]
+	Codes     dict.Counter[CodeType]
+	CharCount int
 }
 
 // Go Line object
@@ -187,4 +209,19 @@ func newErrorLine(length int) *Line {
 // Create new Line with type: LINE_CODE
 func newCodeLine(length int) *Line {
 	return &Line{Type: LINE_CODE, Length: length}
+}
+
+// Return module package names
+func (mod Module) PackageNames() []string {
+	return list.Map(mod.Packages, (*Package).GetCode)
+}
+
+// Return package file names
+func (pkg Package) FileNames() []string {
+	return list.Map(pkg.Files, (*File).GetCode)
+}
+
+// Return package file count
+func (pkg *Package) FileCount() int {
+	return len(pkg.Files)
 }

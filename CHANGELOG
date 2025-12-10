@@ -12,11 +12,21 @@ TODO:
         - graphical representation of dependencies 
         - graphs/charts of module stats
 ###############################################################
-v0.2.3 - Stats and Code Report 
+v0.2.4 - Code Report 
     - Commit: 
-    - Stats Report 
     - Code Report 
     - Only include relevant CodeTypes (omit 0 counts)
+v0.2.3 - Stats Report 
+    x Commit: 2025-12-10 09:38
+    x Fix bug: concurrent map iteration and map write 
+        x mod.Deps.ExternalUsers is used in loop for checking isExternalDependency
+        x but also being written to for external package users
+        x Solution: used mod.Deps.External list instead
+    x Module Header Stats:
+        x Lines, AvgLinePerFile (Code / Test)
+        x Characters, AvgCharPerFile, AvgCharPerLine (Code/Test) 
+    x Table: Per Package, Lines per File 
+    x Table: Per Package, Chars per File
 v0.2.2 - Refactor Code 
     x Commit: 2025-12-05 10:05
     x Combine processing of dependencies, stats, and codes 
