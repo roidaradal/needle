@@ -48,11 +48,19 @@ func wrapTdTags(text string, class string) string {
 }
 
 // Wrap string by td tags, with rowspan
-func wrapTdTagsSpan(text string, class string, rowspan int) string {
+func wrapTdTagsRowspan(text string, class string, rowspan int) string {
 	if class != "" {
 		class = fmt.Sprintf("class=%q", class)
 	}
 	return fmt.Sprintf("<td %s rowspan='%d'>%s</td>", class, rowspan, text)
+}
+
+// Wrap strings by td tags, with colspan
+func wrapTdTagsColspan(text string, class string, colspan int) string {
+	if class != "" {
+		class = fmt.Sprintf("class=%q", class)
+	}
+	return fmt.Sprintf("<td %s colspan='%d'>%s</td>", class, colspan, text)
 }
 
 // Create list items string

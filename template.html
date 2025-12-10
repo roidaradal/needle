@@ -16,10 +16,67 @@
         td.right {
             text-align: right;
         }
+        td.global {
+            background-color: aqua;
+            min-width: 1em; padding: 3px;
+        }
+        td.local {
+            background-color: yellow;
+            min-width: 1em; padding: 3px;
+        }
     </style>
 </head>
 <body><div id="app">
     <h1>%ModuleName%</h1>
+
+    <div id="code"><h2>Code</h2>
+        <table border=""1><tbody>
+            <tr>
+                <th>Lines</th>
+                <td>Code<br/>%CodesLineCount%<br/>%CodesLineShare%</td>
+                <td>Error<br/>%ErrorLineCount%<br/>%ErrorLineShare%</td>
+                <td>Head<br/>%HeadLineCount%<br/>%HeadLineShare%</td>
+                <td>Comment<br/>%CommentLineCount%<br/>%CommentLineShare%</td>
+                <td>Space<br/>%SpaceLineCount%<br/>%SpaceLineShare%</td>
+                <td>Total<br/>%ModLineCount%<br/>&nbsp;</td>
+            </tr>
+            <tr>
+                <th>Characters</th>
+                <td>Code<br/>%CodesCharCount%<br/>%CodesCharShare%</td>
+                <td>Error<br/>%ErrorCharCount%<br/>%ErrorCharShare%</td>
+                <td>Head<br/>%HeadCharCount%<br/>%HeadCharShare%</td>
+                <td>Comment<br/>%CommentCharCount%<br/>%CommentCharShare%</td>
+                <td>Space<br/>%SpaceCharCount%<br/>%SpaceCharShare%</td>
+                <td>Total<br/>%ModCharCount%<br/>&nbsp;</td>
+            </tr>
+        </tbody></table>
+
+        <table border="1">
+            <thead><tr>
+                <th>Packages</th>
+                <th>Chars</th>
+                <th colspan="2">Code</th>
+                <th colspan="2">Error</th>
+                <th colspan="2">Head</th>
+                <th colspan="2">Comment</th>
+                <th colspan="2">Space</th>
+            </tr></thead>
+            <tbody>%CodeCharsTable%</tbody>
+        </table>
+
+        <table border="1">
+            <thead><tr>
+                <th>Packages</th>
+                <th>Lines</th>
+                <th colspan="2">Code</th>
+                <th colspan="2">Error</th>
+                <th colspan="2">Head</th>
+                <th colspan="2">Comment</th>
+                <th colspan="2">Space</th>
+            </tr></thead>
+            <tbody>%CodeLinesTable%</tbody>
+        </table>
+    </div>
 
     <div id="mod"><h2>Module</h2>
         <table border="1"><tbody>

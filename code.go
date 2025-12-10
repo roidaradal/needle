@@ -37,6 +37,8 @@ func buildModuleTree(mod *Module) error {
 		dict.UpdateCounts(mod.Stats.Files, d.pkg.FileTypes)
 		dict.UpdateCounts(mod.Stats.FileLines, d.pkg.FileLines)
 		dict.UpdateCounts(mod.Stats.FileChars, d.pkg.FileChars)
+		dict.UpdateCounts(mod.Code.Lines, d.pkg.LineTypes)
+		dict.UpdateCounts(mod.Code.Chars, d.pkg.CharTypes)
 		for dep, isInternal := range d.pkg.Deps {
 			if isInternal {
 				mod.Deps.Of[d.name] = append(mod.Deps.Of[d.name], dep)
@@ -76,6 +78,8 @@ func newPackage(mod *Module, name string, files []string) (*Package, error) {
 		FileTypes: make(dict.Counter[FileType]),
 		FileLines: make(dict.Counter[FileType]),
 		FileChars: make(dict.Counter[FileType]),
+		LineTypes: make(dict.Counter[LineType]),
+		CharTypes: make(dict.Counter[LineType]),
 	}
 
 	// Run concurrently
@@ -88,6 +92,8 @@ func newPackage(mod *Module, name string, files []string) (*Package, error) {
 		maps.Copy(pkg.Deps, file.Deps)
 		dict.UpdateCounts(pkg.Blocks, file.Blocks)
 		dict.UpdateCounts(pkg.Codes, file.Codes)
+		dict.UpdateCounts(pkg.LineTypes, file.LineTypes)
+		dict.UpdateCounts(pkg.CharTypes, file.CharTypes)
 	}
 	err := conk.Tasks(files, task, onReceive)
 	if err != nil {
@@ -134,12 +140,14 @@ func newFile(mod *Module, pkg *Package, path string) (*File, error) {
 	}
 
 	file := &File{
-		Name:   filepath.Base(path),
-		Type:   lang.Ternary(endsWith(path, "_test.go"), FILE_TEST, FILE_CODE),
-		Lines:  make([]*Line, 0),
-		Deps:   make(map[string]bool),
-		Blocks: make(dict.Counter[BlockType]),
-		Codes:  make(dict.Counter[CodeType]),
+		Name:      filepath.Base(path),
+		Type:      lang.Ternary(endsWith(path, "_test.go"), FILE_TEST, FILE_CODE),
+		Lines:     make([]*Line, 0),
+		Deps:      make(map[string]bool),
+		Blocks:    make(dict.Counter[BlockType]),
+		Codes:     make(dict.Counter[CodeType]),
+		LineTypes: make(dict.Counter[LineType]),
+		CharTypes: make(dict.Counter[LineType]),
 	}
 
 	lines, err := io.ReadRawLines(path)
@@ -300,6 +308,8 @@ func newFile(mod *Module, pkg *Package, path string) (*File, error) {
 
 		file.Lines = append(file.Lines, line)
 		file.CharCount += line.Length
+		file.LineTypes[line.Type] += 1
+		file.CharTypes[line.Type] += line.Length
 	}
 
 	return file, nil

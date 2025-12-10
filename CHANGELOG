@@ -12,10 +12,16 @@ TODO:
         - graphical representation of dependencies 
         - graphs/charts of module stats
 ###############################################################
-v0.2.4 - Code Report 
+v0.2.5 - Code Report 2
     - Commit: 
-    - Code Report 
     - Only include relevant CodeTypes (omit 0 counts)
+    - Globals Breakdown 
+    - Functions Breakdown 
+    - Types Breakdown
+v0.2.4 - Code Report 1
+    x Commit: 2025-12-10 11:47
+    x Line Breakdown 
+    x Chars Breakdown 
 v0.2.3 - Stats Report 
     x Commit: 2025-12-10 09:38
     x Fix bug: concurrent map iteration and map write 

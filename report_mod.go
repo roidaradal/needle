@@ -29,6 +29,7 @@ func BuildReport(mod *Module, path string) error {
 		addModReport,
 		addStatsReport,
 		addDepsReport,
+		addCodeReport,
 	}
 	for _, decorator := range decorators {
 		decorator(mod, replacements)

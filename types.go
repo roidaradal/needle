@@ -42,6 +42,8 @@ type Stats struct {
 type Code struct {
 	Blocks dict.Counter[BlockType]
 	Types  dict.Counter[CodeType]
+	Lines  dict.Counter[LineType]
+	Chars  dict.Counter[LineType]
 }
 
 // Create new Module
@@ -60,6 +62,8 @@ func newModule() *Module {
 		Code: Code{
 			Blocks: make(dict.Counter[BlockType]),
 			Types:  make(dict.Counter[CodeType]),
+			Lines:  make(dict.Counter[LineType]),
+			Chars:  make(dict.Counter[LineType]),
 		},
 		Stats: Stats{
 			Packages:  make(dict.Counter[PackageType]),
@@ -154,6 +158,8 @@ type Package struct {
 	FileTypes dict.Counter[FileType]
 	FileLines dict.Counter[FileType]
 	FileChars dict.Counter[FileType]
+	LineTypes dict.Counter[LineType]
+	CharTypes dict.Counter[LineType]
 	LineCount int
 	CharCount int
 }
@@ -166,6 +172,8 @@ type File struct {
 	Deps      map[string]bool // dependency => isInternal
 	Blocks    dict.Counter[BlockType]
 	Codes     dict.Counter[CodeType]
+	LineTypes dict.Counter[LineType]
+	CharTypes dict.Counter[LineType]
 	CharCount int
 }
 

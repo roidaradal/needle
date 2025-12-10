@@ -28,10 +28,10 @@ func addStatsReport(mod *Module, rep dict.StringMap) {
 		rowspan := 1 + pkgFileCount
 		table = append(table,
 			"<tr>",
-			wrapTdTagsSpan(pkgName, "", rowspan),
-			wrapTdTagsSpan(percentage(pkgLineCount, mod.Stats.LineCount), "center", rowspan),
-			wrapTdTagsSpan(number.Comma(pkgLineCount), "center", rowspan),
-			wrapTdTagsSpan(average(pkgLineCount, pkgFileCount), "center", rowspan),
+			wrapTdTagsRowspan(pkgName, "", rowspan),
+			wrapTdTagsRowspan(percentage(pkgLineCount, mod.Stats.LineCount), "center", rowspan),
+			wrapTdTagsRowspan(number.Comma(pkgLineCount), "center", rowspan),
+			wrapTdTagsRowspan(average(pkgLineCount, pkgFileCount), "center", rowspan),
 			"</tr>",
 		)
 		filenames := pkg.FileNames()
@@ -67,11 +67,11 @@ func addStatsReport(mod *Module, rep dict.StringMap) {
 		rowspan := 1 + pkgFileCount
 		table = append(table,
 			"<tr>",
-			wrapTdTagsSpan(pkgName, "", rowspan),
-			wrapTdTagsSpan(percentage(pkgCharCount, mod.Stats.CharCount), "center", rowspan),
-			wrapTdTagsSpan(number.Comma(pkgCharCount), "center", rowspan),
-			wrapTdTagsSpan(average(pkgCharCount, pkgFileCount), "center", rowspan),
-			wrapTdTagsSpan(average(pkgCharCount, pkg.LineCount), "center", rowspan),
+			wrapTdTagsRowspan(pkgName, "", rowspan),
+			wrapTdTagsRowspan(percentage(pkgCharCount, mod.Stats.CharCount), "center", rowspan),
+			wrapTdTagsRowspan(number.Comma(pkgCharCount), "center", rowspan),
+			wrapTdTagsRowspan(average(pkgCharCount, pkgFileCount), "center", rowspan),
+			wrapTdTagsRowspan(average(pkgCharCount, pkg.LineCount), "center", rowspan),
 			"</tr>",
 		)
 		filenames := pkg.FileNames()
