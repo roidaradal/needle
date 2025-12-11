@@ -49,7 +49,33 @@
                 <td>Space<br/>%SpaceCharCount%<br/>%SpaceCharShare%</td>
                 <td>Total<br/>%ModCharCount%<br/>&nbsp;</td>
             </tr>
+            <tr>
+                <th rowspan="2">Code</th>
+                <td colspan="2" class="center">Globals: %GlobalCount%</td>
+                <td colspan="2" class="center">Functions: %FunctionCount%</td>
+                <td colspan="2" class="center">Types: %TypeCount%</td>
+            </tr>
+            <tr>
+                <td>Public: %PublicGlobalCount%</td>
+                <td>Private: %PrivateGlobalCount%</td>
+                <td>Public: %PublicFunctionCount%</td>
+                <td>Private: %PrivateFunctionCount%</td>
+                <td>Public: %PublicTypeCount%</td>
+                <td>Private: %PrivateTypeCount%</td>
+            </tr>
         </tbody></table>
+
+        <table border="1">
+            %TypesTable%
+        </table>
+
+        <table border="1">
+            %FunctionsTable%
+        </table>
+
+        <table border="1">
+            %GlobalsTable%
+        </table>
 
         <table border="1">
             <thead><tr>

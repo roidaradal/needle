@@ -88,44 +88,44 @@ type (
 )
 
 const (
-	PKG_LIB  PackageType = "lib"
-	PKG_MAIN PackageType = "main"
+	PKG_LIB  PackageType = "Lib"
+	PKG_MAIN PackageType = "Main"
 )
 const (
-	FILE_CODE FileType = "code"
-	FILE_TEST FileType = "test"
+	FILE_CODE FileType = "Code"
+	FILE_TEST FileType = "Test"
 )
 const (
-	LINE_CODE    LineType = "code"
-	LINE_ERROR   LineType = "error"
-	LINE_HEAD    LineType = "head"
-	LINE_SPACE   LineType = "space"
-	LINE_COMMENT LineType = "comment"
+	LINE_CODE    LineType = "Codes"
+	LINE_ERROR   LineType = "Error"
+	LINE_HEAD    LineType = "Head"
+	LINE_COMMENT LineType = "Comment"
+	LINE_SPACE   LineType = "Space"
 )
 
 const (
-	CODE_FUNCTION BlockType = "function"
-	CODE_TYPE     BlockType = "type"
-	CODE_GLOBAL   BlockType = "global"
+	CODE_FUNCTION BlockType = "Function"
+	CODE_TYPE     BlockType = "Type"
+	CODE_GLOBAL   BlockType = "Global"
 )
 
 const (
 	NOT_CODE       CodeType = "not_code"
 	CODE_GROUP     CodeType = "group"
-	PUB_FUNCTION   CodeType = "pub_function"
-	PRIV_FUNCTION  CodeType = "priv_function"
-	PUB_METHOD     CodeType = "pub_method"
-	PRIV_METHOD    CodeType = "priv_method"
-	PUB_STRUCT     CodeType = "pub_struct"
-	PRIV_STRUCT    CodeType = "priv_struct"
-	PUB_INTERFACE  CodeType = "pub_interface"
-	PRIV_INTERFACE CodeType = "priv_interface"
-	PUB_ALIAS      CodeType = "pub_alias"
-	PRIV_ALIAS     CodeType = "priv_alias"
-	PUB_CONST      CodeType = "pub_const"
-	PRIV_CONST     CodeType = "priv_const"
-	PUB_VAR        CodeType = "pub_var"
-	PRIV_VAR       CodeType = "priv_var"
+	PUB_FUNCTION   CodeType = "PubFunction"
+	PRIV_FUNCTION  CodeType = "PrivFunction"
+	PUB_METHOD     CodeType = "PubMethod"
+	PRIV_METHOD    CodeType = "PrivMethod"
+	PUB_STRUCT     CodeType = "PubStruct"
+	PRIV_STRUCT    CodeType = "PrivStruct"
+	PUB_INTERFACE  CodeType = "PubInterface"
+	PRIV_INTERFACE CodeType = "PrivInterface"
+	PUB_ALIAS      CodeType = "PubAlias"
+	PRIV_ALIAS     CodeType = "PrivAlias"
+	PUB_CONST      CodeType = "PubConst"
+	PRIV_CONST     CodeType = "PrivConst"
+	PUB_VAR        CodeType = "PubVar"
+	PRIV_VAR       CodeType = "PrivVar"
 )
 
 // File system folder

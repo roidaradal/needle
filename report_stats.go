@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -12,109 +13,122 @@ import (
 
 // Add stats report data
 func addStatsReport(mod *Module, rep dict.StringMap) {
-	// Lines Table
-	table := make([]string, 0)
-	pkgNames := mod.PackageNames()
-	lineCounts := list.Map(mod.Packages, func(pkg *Package) int {
-		return pkg.LineCount
-	})
-	pkgLineCounts := dict.Entries(dict.Zip(pkgNames, lineCounts))
-	slices.SortFunc(pkgLineCounts, sortDescCount)
+	var key string
 	lookup := ds.NewLookupCode(mod.Packages)
-	for _, e := range pkgLineCounts {
-		pkgName, pkgLineCount := e.Tuple()
-		pkg := lookup[pkgName]
-		pkgFileCount := pkg.FileCount()
-		rowspan := 1 + pkgFileCount
-		table = append(table,
-			"<tr>",
-			wrapTdTagsRowspan(pkgName, "", rowspan),
-			wrapTdTagsRowspan(percentage(pkgLineCount, mod.Stats.LineCount), "center", rowspan),
-			wrapTdTagsRowspan(number.Comma(pkgLineCount), "center", rowspan),
-			wrapTdTagsRowspan(average(pkgLineCount, pkgFileCount), "center", rowspan),
-			"</tr>",
-		)
-		filenames := pkg.FileNames()
-		lineCounts := list.Map(pkg.Files, (func(f *File) int {
-			return len(f.Lines)
-		}))
-		fileLineCounts := dict.Entries(dict.Zip(filenames, lineCounts))
-		slices.SortFunc(fileLineCounts, sortDescCount)
-		for _, e2 := range fileLineCounts {
-			filename, fileLineCount := e2.Tuple()
-			table = append(table,
-				"<tr>",
-				wrapTdTags(number.Comma(fileLineCount), "right"),
-				wrapTdTags(percentage(fileLineCount, pkgLineCount), "center"),
-				wrapTdTags(filename, ""),
-				"</tr>",
-			)
-		}
-	}
-	linesTable := strings.Join(table, "")
-
-	// Chars Table
-	table = make([]string, 0)
-	charCounts := list.Map(mod.Packages, func(pkg *Package) int {
-		return pkg.CharCount
-	})
-	pkgCharCounts := dict.Entries(dict.Zip(pkgNames, charCounts))
-	slices.SortFunc(pkgCharCounts, sortDescCount)
-	for _, e := range pkgCharCounts {
-		pkgName, pkgCharCount := e.Tuple()
-		pkg := lookup[pkgName]
-		pkgFileCount := pkg.FileCount()
-		rowspan := 1 + pkgFileCount
-		table = append(table,
-			"<tr>",
-			wrapTdTagsRowspan(pkgName, "", rowspan),
-			wrapTdTagsRowspan(percentage(pkgCharCount, mod.Stats.CharCount), "center", rowspan),
-			wrapTdTagsRowspan(number.Comma(pkgCharCount), "center", rowspan),
-			wrapTdTagsRowspan(average(pkgCharCount, pkgFileCount), "center", rowspan),
-			wrapTdTagsRowspan(average(pkgCharCount, pkg.LineCount), "center", rowspan),
-			"</tr>",
-		)
-		filenames := pkg.FileNames()
-		charCounts := list.Map(pkg.Files, func(f *File) int {
-			return f.CharCount
-		})
-		fileCharCounts := dict.Entries(dict.Zip(filenames, charCounts))
-		slices.SortFunc(fileCharCounts, sortDescCount)
-		for _, e2 := range fileCharCounts {
-			filename, fileCharCount := e2.Tuple()
-			table = append(table,
-				"<tr>",
-				wrapTdTags(number.Comma(fileCharCount), "right"),
-				wrapTdTags(percentage(fileCharCount, pkgCharCount), "center"),
-				wrapTdTags(filename, ""),
-				"</tr>",
-			)
-		}
-	}
-	charsTable := strings.Join(table, "")
 
 	// Lines
-	rep["ModLineCount"] = number.Comma(mod.Stats.LineCount)
-	rep["CodeLineCount"] = number.Comma(mod.Stats.FileLines[FILE_CODE])
-	rep["TestLineCount"] = number.Comma(mod.Stats.FileLines[FILE_TEST])
-	rep["CodeLineShare"] = percentage(mod.Stats.FileLines[FILE_CODE], mod.Stats.LineCount)
-	rep["TestLineShare"] = percentage(mod.Stats.FileLines[FILE_TEST], mod.Stats.LineCount)
-	rep["AvgLinePerFile"] = average(mod.Stats.LineCount, mod.Stats.FileCount)
-	rep["CodeALPF"] = average(mod.Stats.FileLines[FILE_CODE], mod.Stats.Files[FILE_CODE])
-	rep["TestALPF"] = average(mod.Stats.FileLines[FILE_TEST], mod.Stats.Files[FILE_TEST])
-	rep["LinesTable"] = linesTable
+	fileTypes := []FileType{FILE_CODE, FILE_TEST}
+	fileCount := mod.Stats.FileCount
+	lineCount := mod.Stats.LineCount
+	rep["ModLineCount"] = number.Comma(lineCount)
+	rep["AvgLinePerFile"] = average(lineCount, fileCount)
+	for _, fileType := range fileTypes {
+		typeCount := mod.Stats.FileLines[fileType]
+
+		key = fmt.Sprintf("%sLineCount", fileType)
+		rep[key] = number.Comma(typeCount)
+
+		key = fmt.Sprintf("%sLineShare", fileType)
+		rep[key] = percentage(typeCount, lineCount)
+
+		key = fmt.Sprintf("%sALPF", fileType)
+		rep[key] = average(typeCount, mod.Stats.Files[fileType])
+	}
+	rep["LinesTable"] = newStatsTable(mod, &statsConfig{
+		lookup:   lookup,
+		modCount: mod.Stats.LineCount,
+		countFn: func(pkg *Package) int {
+			return pkg.LineCount
+		},
+		fileFn: func(f *File) int {
+			return len(f.Lines)
+		},
+		averageCols: func(pkgCount int, pkg *Package, rowspan int) []string {
+			return []string{
+				wrapTdTagsRowspan(average(pkgCount, pkg.FileCount()), "center", rowspan),
+			}
+		},
+	})
 
 	// Characters
-	rep["ModCharCount"] = number.Comma(mod.Stats.CharCount)
-	rep["CodeCharCount"] = number.Comma(mod.Stats.FileChars[FILE_CODE])
-	rep["TestCharCount"] = number.Comma(mod.Stats.FileChars[FILE_TEST])
-	rep["CodeCharShare"] = percentage(mod.Stats.FileChars[FILE_CODE], mod.Stats.CharCount)
-	rep["TestCharShare"] = percentage(mod.Stats.FileChars[FILE_TEST], mod.Stats.CharCount)
-	rep["AvgCharPerFile"] = average(mod.Stats.CharCount, mod.Stats.FileCount)
-	rep["CodeACPF"] = average(mod.Stats.FileChars[FILE_CODE], mod.Stats.Files[FILE_CODE])
-	rep["TestACPF"] = average(mod.Stats.FileChars[FILE_TEST], mod.Stats.Files[FILE_TEST])
-	rep["AvgCharPerLine"] = average(mod.Stats.CharCount, mod.Stats.LineCount)
-	rep["CodeACPL"] = average(mod.Stats.FileChars[FILE_CODE], mod.Stats.FileLines[FILE_CODE])
-	rep["TestACPL"] = average(mod.Stats.FileChars[FILE_TEST], mod.Stats.FileLines[FILE_TEST])
-	rep["CharsTable"] = charsTable
+	charCount := mod.Stats.CharCount
+	rep["ModCharCount"] = number.Comma(charCount)
+	rep["AvgCharPerFile"] = average(charCount, fileCount)
+	rep["AvgCharPerLine"] = average(charCount, lineCount)
+	for _, fileType := range fileTypes {
+		typeCount := mod.Stats.FileChars[fileType]
+
+		key = fmt.Sprintf("%sCharCount", fileType)
+		rep[key] = number.Comma(typeCount)
+
+		key = fmt.Sprintf("%sCharShare", fileType)
+		rep[key] = percentage(typeCount, charCount)
+
+		key = fmt.Sprintf("%sACPF", fileType)
+		rep[key] = average(typeCount, mod.Stats.Files[fileType])
+
+		key = fmt.Sprintf("%sACPL", fileType)
+		rep[key] = average(typeCount, mod.Stats.FileLines[fileType])
+	}
+	rep["CharsTable"] = newStatsTable(mod, &statsConfig{
+		lookup:   lookup,
+		modCount: mod.Stats.CharCount,
+		countFn: func(pkg *Package) int {
+			return pkg.CharCount
+		},
+		fileFn: func(f *File) int {
+			return f.CharCount
+		},
+		averageCols: func(pkgCount int, pkg *Package, rowspan int) []string {
+			return []string{
+				wrapTdTagsRowspan(average(pkgCount, pkg.FileCount()), "center", rowspan),
+				wrapTdTagsRowspan(average(pkgCount, pkg.LineCount), "center", rowspan),
+			}
+		},
+	})
+}
+
+type statsConfig struct {
+	lookup      ds.LookupCode[*Package]
+	modCount    int
+	countFn     func(*Package) int
+	fileFn      func(*File) int
+	averageCols func(int, *Package, int) []string
+}
+
+// Create new stats table (lines / char)
+func newStatsTable(mod *Module, cfg *statsConfig) string {
+	table := make([]string, 0)
+	counts := list.Map(mod.Packages, cfg.countFn)
+	pkgEntries := dict.Entries(dict.Zip(mod.PackageNames(), counts))
+	slices.SortFunc(pkgEntries, sortDescCount)
+	for _, e := range pkgEntries {
+		pkgName, pkgCount := e.Tuple()
+		pkg := cfg.lookup[pkgName]
+		rowspan := 1 + pkg.FileCount()
+		table = append(table,
+			"<tr>",
+			wrapTdTagsRowspan(pkgName, "", rowspan),
+			wrapTdTagsRowspan(percentage(pkgCount, cfg.modCount), "center", rowspan),
+			wrapTdTagsRowspan(number.Comma(pkgCount), "center", rowspan),
+		)
+		table = append(table, cfg.averageCols(pkgCount, pkg, rowspan)...)
+		table = append(table, "</tr>")
+
+		fileCounts := list.Map(pkg.Files, cfg.fileFn)
+		fileEntries := dict.Entries(dict.Zip(pkg.FileNames(), fileCounts))
+		slices.SortFunc(fileEntries, sortDescCount)
+		for _, e2 := range fileEntries {
+			fileName, fileCount := e2.Tuple()
+			table = append(table,
+				"<tr>",
+				wrapTdTags(number.Comma(fileCount), "right"),
+				wrapTdTags(percentage(fileCount, pkgCount), "center"),
+				wrapTdTags(fileName, ""),
+				"</tr>",
+			)
+		}
+	}
+
+	return strings.Join(table, "")
 }

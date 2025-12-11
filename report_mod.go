@@ -45,10 +45,10 @@ func BuildReport(mod *Module, path string) error {
 
 // Add module report data
 func addModReport(mod *Module, rep dict.StringMap) {
+	var key string
 	table := make([]string, 0)
-	pkgNames := mod.PackageNames()
 	fileCounts := list.Map(mod.Packages, (*Package).FileCount)
-	pkgFileCounts := dict.Entries(dict.Zip(pkgNames, fileCounts))
+	pkgFileCounts := dict.Entries(dict.Zip(mod.PackageNames(), fileCounts))
 	slices.SortFunc(pkgFileCounts, sortDescCount)
 	lookup := ds.NewLookupCode(mod.Packages)
 	hasTest := mod.Stats.Files[FILE_TEST] > 0
@@ -70,13 +70,21 @@ func addModReport(mod *Module, rep dict.StringMap) {
 		)
 	}
 	rep["ModPackageCount"] = number.Comma(mod.Stats.PackageCount)
-	rep["ModFileCount"] = number.Comma(mod.Stats.FileCount)
-	rep["LibPackageCount"] = number.Comma(mod.Stats.Packages[PKG_LIB])
-	rep["MainPackageCount"] = number.Comma(mod.Stats.Packages[PKG_MAIN])
-	rep["CodeFileCount"] = number.Comma(mod.Stats.Files[FILE_CODE])
-	rep["TestFileCount"] = number.Comma(mod.Stats.Files[FILE_TEST])
-	rep["CodeFileShare"] = percentage(mod.Stats.Files[FILE_CODE], mod.Stats.FileCount)
-	rep["TestFileShare"] = percentage(mod.Stats.Files[FILE_TEST], mod.Stats.FileCount)
+	for _, pkgType := range []PackageType{PKG_LIB, PKG_MAIN} {
+		key = fmt.Sprintf("%sPackageCount", pkgType)
+		rep[key] = number.Comma(mod.Stats.Packages[pkgType])
+	}
+
+	fileCount := mod.Stats.FileCount
+	rep["ModFileCount"] = number.Comma(fileCount)
+	for _, fileType := range []FileType{FILE_CODE, FILE_TEST} {
+		typeCount := mod.Stats.Files[fileType]
+		key = fmt.Sprintf("%sFileCount", fileType)
+		rep[key] = number.Comma(typeCount)
+
+		key = fmt.Sprintf("%sFileShare", fileType)
+		rep[key] = percentage(typeCount, fileCount)
+	}
 	rep["ModuleTableHeader"] = lang.Ternary(hasTest, "<th>Split</th>", "")
 	rep["ModuleTable"] = strings.Join(table, "")
 }

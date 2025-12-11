@@ -39,6 +39,8 @@ func buildModuleTree(mod *Module) error {
 		dict.UpdateCounts(mod.Stats.FileChars, d.pkg.FileChars)
 		dict.UpdateCounts(mod.Code.Lines, d.pkg.LineTypes)
 		dict.UpdateCounts(mod.Code.Chars, d.pkg.CharTypes)
+		dict.UpdateCounts(mod.Code.Blocks, d.pkg.Blocks)
+		dict.UpdateCounts(mod.Code.Types, d.pkg.Codes)
 		for dep, isInternal := range d.pkg.Deps {
 			if isInternal {
 				mod.Deps.Of[d.name] = append(mod.Deps.Of[d.name], dep)
