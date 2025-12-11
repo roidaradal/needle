@@ -11,7 +11,7 @@ import (
 	"github.com/roidaradal/fn/number"
 )
 
-var LineTypes = []LineType{LINE_CODE, LINE_ERROR, LINE_HEAD, LINE_COMMENT, LINE_SPACE}
+var lineTypes = []LineType{LINE_CODE, LINE_ERROR, LINE_HEAD, LINE_COMMENT, LINE_SPACE}
 
 // Add code report data
 func addCodeReport(mod *Module, rep dict.StringMap) {
@@ -20,7 +20,7 @@ func addCodeReport(mod *Module, rep dict.StringMap) {
 	// Code Header
 	modLineCount := mod.Stats.LineCount
 	modCharCount := mod.Stats.CharCount
-	for _, lineType := range LineTypes {
+	for _, lineType := range lineTypes {
 		lineCount := mod.Code.Lines[lineType]
 		charCount := mod.Code.Chars[lineType]
 
@@ -134,7 +134,7 @@ func newCodeBreakdown(mod *Module, cfg *codeBreakdownConfig) string {
 			"</tr><tr>",
 			wrapTdTags(percentage(pkgCount, cfg.modCount), "center"),
 		}
-		for _, lineType := range LineTypes {
+		for _, lineType := range lineTypes {
 			typeCount := counter[lineType]
 			table = append(table, wrapTdTagsColspan(number.Comma(typeCount), "center", 2))
 			row = append(row,
@@ -151,10 +151,11 @@ func newCodeBreakdown(mod *Module, cfg *codeBreakdownConfig) string {
 		wrapTdTagsRowspan(number.Comma(cfg.modCount), "center", 2),
 	)
 	row := []string{"</tr><tr>"}
-	for _, lineType := range LineTypes {
+	for _, lineType := range lineTypes {
 		typeCount := cfg.modCounter[lineType]
+		bottomCell := fmt.Sprintf("%s<br/><b>%s</b>", percentage(typeCount, cfg.modCount), lineType)
 		table = append(table, wrapTdTagsColspan(number.Comma(typeCount), "center global", 2))
-		row = append(row, wrapTdTagsColspan(percentage(typeCount, cfg.modCount), "center", 2))
+		row = append(row, wrapTdTagsColspan(bottomCell, "center", 2))
 	}
 	table = append(table, strings.Join(row, ""), "</tr>")
 	return strings.Join(table, "")
@@ -233,8 +234,9 @@ func newCodeTable(mod *Module, cfg *codeConfig) string {
 	row := []string{"</tr><tr>"}
 	for _, key := range activeKeys {
 		count := mod.Code.Types[key]
+		bottomCell := fmt.Sprintf("%s<br/><b>%s</b>", percentage(count, modCount), key)
 		table = append(table, wrapTdTagsColspan(number.Comma(count), "center global", 2))
-		row = append(row, wrapTdTagsColspan(percentage(count, modCount), "center", 2))
+		row = append(row, wrapTdTagsColspan(bottomCell, "center", 2))
 	}
 
 	var lastRow string = ""

@@ -15,11 +15,12 @@ import (
 
 // Create report HTML file from template
 func BuildReport(mod *Module, path string) error {
-	// TODO: Load template from string variable instead of file
-	report, err := io.ReadFile("template.html")
-	if err != nil {
-		return err
-	}
+	// Uncomment this block to test on template.html
+	// report, err := io.ReadFile("template.html")
+	// if err != nil {
+	// 	return err
+	// }
+	report := templateHTML
 	// Initialize replacements
 	replacements := dict.StringMap{
 		"ModuleName": mod.Name,

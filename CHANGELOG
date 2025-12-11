@@ -5,12 +5,16 @@ TODO:
         - Get documentation from comments
         - Produce Markdown file
     - viz: 
-        - After report is finalized, transfer template.html to a local string variable
         - graphical representation of dependencies 
         - graphs/charts of module stats
 ###############################################################
 v0.2.6 - Report Layout 
-    - Commit: 
+    x Commit: 2025-12-11 16:14
+    x Main Tabs 
+    x Deps Tabs 
+    x Module Tabs
+    x Code Tabs 
+    x Transfer template.html to local string variable
 v0.2.5 - Code Report 2
     x Commit: 2025-12-11 12:04
     x Only include relevant CodeTypes (omit 0 counts)

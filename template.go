@@ -1,3 +1,6 @@
+package main
+
+var templateHTML = `
 <!doctype html>
 <html>
 <head>
@@ -349,3 +352,4 @@
     </script>
 </div></body>
 </html>
+`
