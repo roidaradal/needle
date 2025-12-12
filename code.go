@@ -72,7 +72,7 @@ func buildModuleTree(mod *Module) error {
 func newPackage(mod *Module, name string, files []string) (*Package, error) {
 	folder := mod.Path + name
 	pkg := &Package{
-		Name:      str.GuardWith(strings.TrimPrefix(name, "/"), "/"),
+		Name:      nodeToPackageName(name),
 		Files:     make([]*File, 0),
 		Deps:      make(map[string]bool),
 		Blocks:    make(dict.Counter[BlockType]),

@@ -2,11 +2,11 @@ package main
 
 import (
 	"cmp"
-	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/roidaradal/fn/dict"
+	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/fn/str"
 )
 
@@ -14,61 +14,97 @@ import (
 func addDepsReport(mod *Module, rep dict.StringMap) {
 	// External dependencies
 	externalDepsCount := len(mod.Deps.ExternalUsers)
-	entries := dict.Entries(mod.Deps.ExternalUsers)
-	slices.SortFunc(entries, func(a, b dict.Entry[string, []string]) int {
-		// Sort by descending order of dependent counts
-		score1 := cmp.Compare(len(b.Value), len(a.Value))
-		if score1 != 0 {
-			return score1
-		}
-		// Tie-breaker: alphabetical
-		return cmp.Compare(a.Key, b.Key)
-	})
-	out := make([]string, 0)
-	for _, entry := range entries {
-		extPkg, users := entry.Tuple()
-		out = append(out,
-			fmt.Sprintf("<li>(<b>%d</b>) %s<ul>", len(users), extPkg),
-			listItems(users),
-			"</ul></li>",
-		)
-	}
 	rep["ExternalDepsCount"] = str.Int(externalDepsCount)
-	rep["ExternalDepsList"] = strings.Join(out, "")
+	if externalDepsCount > 0 {
+		entries := dict.Entries(mod.Deps.ExternalUsers)
+		slices.SortFunc(entries, func(a, b dict.Entry[string, []string]) int {
+			// Sort by descending order of dependent counts
+			score1 := cmp.Compare(len(b.Value), len(a.Value))
+			if score1 != 0 {
+				return score1
+			}
+			// Tie-breaker: alphabetical
+			return cmp.Compare(a.Key, b.Key)
+		})
+		out := []string{
+			"<thead><tr>",
+			wrapTag(th, "Package"),
+			wrapTag(th, "Dependents"),
+			wrapTag(th, button("Show Dependents", withID("toggle-deps-external"), onclick("toggleList('deps','external', 'Dependents')"))),
+			"</tr></thead><tbody>",
+		}
+		for _, entry := range entries {
+			extPkg, users := entry.Tuple()
+			depsList := strings.Join(list.Map(users, nodeToPackageName), "<br/>")
+			out = append(out,
+				"<tr>",
+				wrapTag(td, extPkg),
+				wrapTag(th, str.Int(len(users))),
+				wrapTag(td, depsList, withClass("deps-external-list hidden")),
+				"</tr>",
+			)
+		}
+		rep["ExternalDepsTable"] = strings.Join(out, "") + "</tbody>"
+	} else {
+		rep["ExternalDepsTable"] = wrapTags("No external packages", tbody, tr, td)
+	}
 
 	// Independent packages
 	independentCount := len(mod.Deps.Independent)
 	rep["IndependentCount"] = str.Int(independentCount)
-	rep["IndependentList"] = listItems(mod.Deps.Independent)
+	if independentCount > 0 {
+		out := list.Map(mod.Deps.Independent, func(name string) string {
+			return wrapTags(nodeToPackageName(name), tr, td)
+		})
+		rep["IndependentTable"] = strings.Join(out, "")
+	} else {
+		rep["IndependentTable"] = wrapTags("No independent packages", tr, td)
+	}
 
 	// Dependency packages
-	out = make([]string, 0)
-	levels := dict.Keys(mod.Deps.Levels)
-	slices.Sort(levels)
-	for _, level := range levels {
-		for _, subPkg := range mod.Deps.Levels[level] {
-			outCount := len(mod.Deps.Of[subPkg])
-			inCount := len(mod.Deps.InternalUsers[subPkg])
-			outDetails, inDetails := " ", " "
-			if outCount > 0 {
-				outDetails = strings.Join(mod.Deps.Of[subPkg], "<br/>")
-			}
-			if inCount > 0 {
-				inDetails = strings.Join(mod.Deps.InternalUsers[subPkg], "<br/>")
-			}
-			out = append(out,
-				"<tr>",
-				fmt.Sprintf("<td class='center'>%d</td>", level),
-				fmt.Sprintf("<td>%s</td>", subPkg),
-				fmt.Sprintf("<td class='center'>%d</td>", outCount),
-				fmt.Sprintf("<td class='center'>%d</td>", inCount),
-				fmt.Sprintf("<td>%s</td>", outDetails),
-				fmt.Sprintf("<td>%s</td>", inDetails),
-				"</tr>",
-			)
-		}
-	}
 	dependentCount := mod.Stats.PackageCount - independentCount
 	rep["DependentCount"] = str.Int(dependentCount)
-	rep["DependencyLevels"] = strings.Join(out, "")
+	if dependentCount > 0 {
+		out := []string{
+			"<thead><tr>",
+			wrapTag(th, "Level", withRowspan(2)),
+			wrapTag(th, "Package", withRowspan(2)),
+			wrapTag(th, "Out", withRowspan(2)),
+			wrapTag(th, "In", withRowspan(2)),
+			wrapTag(th, button("Show", withID("toggle-deps-dependent"), onclick("toggleList('deps','dependent', '')")), withColspan(2)),
+			"</tr><tr>",
+			wrapTag(th, "Dependencies"),
+			wrapTag(th, "Dependents"),
+			"</tr></thead>",
+			"<tbody>",
+		}
+		levels := dict.Keys(mod.Deps.Levels)
+		slices.Sort(levels)
+		for _, level := range levels {
+			for _, subPkg := range mod.Deps.Levels[level] {
+				outCount := len(mod.Deps.Of[subPkg])
+				inCount := len(mod.Deps.InternalUsers[subPkg])
+				var outDetails, inDetails string
+				if outCount > 0 {
+					outDetails = strings.Join(list.Map(mod.Deps.Of[subPkg], nodeToPackageName), "<br/>")
+				}
+				if inCount > 0 {
+					inDetails = strings.Join(list.Map(mod.Deps.InternalUsers[subPkg], nodeToPackageName), "<br/>")
+				}
+				out = append(out,
+					"<tr>",
+					wrapTag(td, str.Int(level), withClass(center)),
+					wrapTag(td, nodeToPackageName(subPkg)),
+					wrapTag(td, str.Int(outCount), withClass(center)),
+					wrapTag(td, str.Int(inCount), withClass(center)),
+					wrapTag(td, outDetails, withClass("deps-dependent-list hidden")),
+					wrapTag(td, inDetails, withClass("deps-dependent-list hidden")),
+					"</tr>",
+				)
+			}
+		}
+		rep["DependencyTable"] = strings.Join(out, "") + "</tbody>"
+	} else {
+		rep["DependencyTable"] = wrapTags("No dependent packages", tbody, tr, td)
+	}
 }

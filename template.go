@@ -35,17 +35,10 @@ var templateHTML = `
             background-color: yellow;
             min-width: 1em; padding: 3px;
         }
-        #app {
-            border: 1px solid black;
-            box-shadow: 3px 3px #555;
-            width: 960px;
-            height: 600px;
-            margin: 1em auto;
-        }
         h1, h2 {
-            margin: 0; padding: 0;
-            margin-bottom: 5px;
-            padding-left: 1em;
+            padding: 0;
+            margin: 5px;
+            text-align: center;
         }
         .centered {
             text-align: center;
@@ -57,7 +50,10 @@ var templateHTML = `
         #body {
             width: 100%; height: 85%;
         }
-        div.hidden {
+        #body table, #body div>ul{
+            margin: 1em auto;
+        }
+        .hidden {
             display: none !important;
         }
         #mod, #code, #deps {
@@ -138,16 +134,16 @@ var templateHTML = `
                         <td><b>Test</b><br/>%TestLineCount%<br/>%TestLineShare%</td>
                     </tr>
                     <tr>
-                        <th>AvgLinePerFile</th>
-                        <th>%AvgLinePerFile%</th>
-                        <td><b>Code</b><br/>%CodeALPF%</td>
-                        <td><b>Test</b><br/>%TestALPF%</td>
-                    </tr>
-                    <tr>
                         <th>Characters</th>
                         <th>%ModCharCount%</th>
                         <td><b>Code</b><br/>%CodeCharCount%<br/>%CodeCharShare%</td>
                         <td><b>Test</b><br/>%TestCharCount%<br/>%TestCharShare%</td>
+                    </tr>
+                    <tr>
+                        <th>AvgLinePerFile</th>
+                        <th>%AvgLinePerFile%</th>
+                        <td><b>Code</b><br/>%CodeALPF%</td>
+                        <td><b>Test</b><br/>%TestALPF%</td>
                     </tr>
                     <tr>
                         <th>AvgCharPerFile</th>
@@ -171,7 +167,7 @@ var templateHTML = `
                         <th>%</th>
                         <th>Files</th>
                         %ModuleTableHeader%
-                        <th>List</th>
+                        <th><button id="toggle-mod-files" onclick="toggleList('mod','files', 'Files')">Show Files</button></th>
                     </tr></thead>
                     <tbody>%ModuleTable%</tbody>
                 </table>
@@ -184,7 +180,7 @@ var templateHTML = `
                         <th>%</th>
                         <th>Lines</th>
                         <th title="AvgLinePerFile">ALPF</th>
-                        <th colspan="3">File Lines</th>
+                        <th colspan="3"><button id="toggle-mod-lines" onclick="toggleList('mod', 'lines', 'File Lines')">Show File Lines</button></th>
                     </tr></thead>
                     <tbody>%LinesTable%</tbody>
                 </table>
@@ -198,7 +194,7 @@ var templateHTML = `
                         <th>Chars</th>
                         <th title="AvgCharPerFile">ACPF</th>
                         <th title="AvgCharPerLine">ACPL</th>
-                        <th colspan="3">File Chars</th>
+                        <th colspan="3"><button id="toggle-mod-chars" onclick="toggleList('mod', 'chars', 'File Chars')">Show File Chars</button></th>
                     </tr></thead>
                     <tbody>%CharsTable%</tbody>
                 </table>
@@ -260,12 +256,14 @@ var templateHTML = `
                 <table>
                     <thead><tr>
                         <th>Packages</th>
+                        
                         <th>Lines</th>
                         <th colspan="2">Codes</th>
                         <th colspan="2">Error</th>
                         <th colspan="2">Head</th>
                         <th colspan="2">Comment</th>
                         <th colspan="2">Space</th>
+                        <th><button id="toggle-code-lines" onclick="toggleList('code', 'lines', '%')">Show %</button></th>
                     </tr></thead>
                     <tbody>%CodeLinesTable%</tbody>
                 </table>
@@ -281,6 +279,7 @@ var templateHTML = `
                         <th colspan="2">Head</th>
                         <th colspan="2">Comment</th>
                         <th colspan="2">Space</th>
+                        <th><button id="toggle-code-chars" onclick="toggleList('code','chars','%')">Show %</button></th>
                     </tr></thead>
                     <tbody>%CodeCharsTable%</tbody>
                 </table>
@@ -291,26 +290,22 @@ var templateHTML = `
             <div id="deps-dependent">
                 <h2>Dependent: %DependentCount% / %ModPackageCount%</h2>
                 <table>
-                    <thead>
-                        <th>Level</th>
-                        <th>Package</th>
-                        <th>Out</th>
-                        <th>In</th>
-                        <th>Dependencies</th>
-                        <th>Dependents</th>
-                    </thead>
-                    <tbody>%DependencyLevels%</tbody>
+                    %DependencyTable%
                 </table>
             </div>
 
             <div id="deps-independent" class="hidden">
                 <h2>Independent: %IndependentCount% / %ModPackageCount%</h2>
-                <ul>%IndependentList%</ul>
+                <table><tbody>
+                    %IndependentTable%
+                </tbody></table>
             </div>
 
             <div id="deps-external" class="hidden">
                 <h2>External: %ExternalDepsCount%</h2>
-                <ul>%ExternalDepsList%</ul>
+                <table>
+                    %ExternalDepsTable%
+                </table>
             </div>
         </div>
     </div>
@@ -322,10 +317,9 @@ var templateHTML = `
             'code'  : 'summary',
             'deps'  : 'dependent',
         };
+        var isExpanded = {};
         var $id = function(id) { return document.getElementById(id) };
-        window.onload = function(){
-            
-        };
+        var $class = function(className) { return Array.from(document.getElementsByClassName(className)) };
         function changeTab(tab) {
             if(tab == currentTab) {
                 return;
@@ -348,6 +342,22 @@ var templateHTML = `
             $id(tab + '-' + old).classList.add('hidden');
             $id(tab + '-' + subTab).classList.remove('hidden');
             currentSubTab[tab] = subTab;
+        }
+        function toggleList(tab, subTab, name) {
+            let key = tab + '-' + subTab;
+            let expanded = isExpanded[key];
+            if(expanded) {
+                $id('toggle-'+key).innerHTML = 'Show ' + name;
+                $class(key+'-list').forEach(function(elt){
+                    elt.classList.add('hidden');
+                });
+            } else {
+                $id('toggle-'+key).innerHTML = 'Hide ' + name;
+                $class(key+'-list').forEach(function(elt){
+                    elt.classList.remove('hidden');
+                });
+            }         
+            isExpanded[key] = !expanded; // toggle
         }
     </script>
 </div></body>

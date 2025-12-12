@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/fn/number"
 	"github.com/roidaradal/fn/str"
 )
@@ -32,40 +31,6 @@ func getLinePart(line string, index int) (string, bool) {
 // Join path by /
 func joinPath(path1, path2 string) string {
 	return fmt.Sprintf("%s/%s", path1, path2)
-}
-
-// Wrap string by li tags
-func wrapLiTags(text string) string {
-	return fmt.Sprintf("<li>%s</li>", text)
-}
-
-// Wrap string by td tags
-func wrapTdTags(text string, class string) string {
-	if class != "" {
-		class = fmt.Sprintf("class=%q", class)
-	}
-	return fmt.Sprintf("<td %s>%s</td>", class, text)
-}
-
-// Wrap string by td tags, with rowspan
-func wrapTdTagsRowspan(text string, class string, rowspan int) string {
-	if class != "" {
-		class = fmt.Sprintf("class=%q", class)
-	}
-	return fmt.Sprintf("<td %s rowspan='%d'>%s</td>", class, rowspan, text)
-}
-
-// Wrap strings by td tags, with colspan
-func wrapTdTagsColspan(text string, class string, colspan int) string {
-	if class != "" {
-		class = fmt.Sprintf("class=%q", class)
-	}
-	return fmt.Sprintf("<td %s colspan='%d'>%s</td>", class, colspan, text)
-}
-
-// Create list items string
-func listItems(items []string) string {
-	return strings.Join(list.Map(items, wrapLiTags), "")
 }
 
 // Return percentage string
@@ -99,4 +64,9 @@ func packageToNodeName(name string) string {
 		name = "/" + name
 	}
 	return name
+}
+
+// Remove prefix / from node name
+func nodeToPackageName(name string) string {
+	return str.GuardWith(strings.TrimPrefix(name, "/"), "/")
 }

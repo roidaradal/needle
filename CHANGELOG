@@ -3,11 +3,25 @@ TODO:
         - Generate package public APIs (list)
         - Consider function headers that span multiple lines
         - Get documentation from comments
-        - Produce Markdown file
     - viz: 
         - graphical representation of dependencies 
         - graphs/charts of module stats
 ###############################################################
+v0.2.7 - Report Toggles
+    x Commit: 2025-12-12 15:05
+    x Remove needle.html from repo
+    x Refactor tag wrapper functions; use functional opts pattern
+    x Module Tab
+        x Files List  
+        x File Lines / Chars 
+    x Code Tab 
+        x Globals / Functions / Types Percentages
+        x Lines / Chars Percentages
+    x Dependencies Tab
+        x Dependencies / Dependents 
+        x External Dependents
+        x Clean up Package names (remove / prefix)
+        x No x package message if 0 count
 v0.2.6 - Report Layout 
     x Commit: 2025-12-11 16:14
     x Main Tabs 

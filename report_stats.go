@@ -35,6 +35,7 @@ func addStatsReport(mod *Module, rep dict.StringMap) {
 		rep[key] = average(typeCount, mod.Stats.Files[fileType])
 	}
 	rep["LinesTable"] = newStatsTable(mod, &statsConfig{
+		name:     "lines",
 		lookup:   lookup,
 		modCount: mod.Stats.LineCount,
 		countFn: func(pkg *Package) int {
@@ -45,7 +46,7 @@ func addStatsReport(mod *Module, rep dict.StringMap) {
 		},
 		averageCols: func(pkgCount int, pkg *Package, rowspan int) []string {
 			return []string{
-				wrapTdTagsRowspan(average(pkgCount, pkg.FileCount()), "center", rowspan),
+				wrapTag(td, average(pkgCount, pkg.FileCount()), withClass(center), withRowspan(rowspan)),
 			}
 		},
 	})
@@ -71,6 +72,7 @@ func addStatsReport(mod *Module, rep dict.StringMap) {
 		rep[key] = average(typeCount, mod.Stats.FileLines[fileType])
 	}
 	rep["CharsTable"] = newStatsTable(mod, &statsConfig{
+		name:     "chars",
 		lookup:   lookup,
 		modCount: mod.Stats.CharCount,
 		countFn: func(pkg *Package) int {
@@ -81,14 +83,15 @@ func addStatsReport(mod *Module, rep dict.StringMap) {
 		},
 		averageCols: func(pkgCount int, pkg *Package, rowspan int) []string {
 			return []string{
-				wrapTdTagsRowspan(average(pkgCount, pkg.FileCount()), "center", rowspan),
-				wrapTdTagsRowspan(average(pkgCount, pkg.LineCount), "center", rowspan),
+				wrapTag(td, average(pkgCount, pkg.FileCount()), withClass(center), withRowspan(rowspan)),
+				wrapTag(td, average(pkgCount, pkg.LineCount), withClass(center), withRowspan(rowspan)),
 			}
 		},
 	})
 }
 
 type statsConfig struct {
+	name        string
 	lookup      ds.LookupCode[*Package]
 	modCount    int
 	countFn     func(*Package) int
@@ -98,6 +101,7 @@ type statsConfig struct {
 
 // Create new stats table (lines / char)
 func newStatsTable(mod *Module, cfg *statsConfig) string {
+	detailsClass := fmt.Sprintf(" hidden mod-%s-list", cfg.name)
 	table := make([]string, 0)
 	counts := list.Map(mod.Packages, cfg.countFn)
 	pkgEntries := dict.Entries(dict.Zip(mod.PackageNames(), counts))
@@ -108,9 +112,9 @@ func newStatsTable(mod *Module, cfg *statsConfig) string {
 		rowspan := 1 + pkg.FileCount()
 		table = append(table,
 			"<tr>",
-			wrapTdTagsRowspan(pkgName, "", rowspan),
-			wrapTdTagsRowspan(percentage(pkgCount, cfg.modCount), "center", rowspan),
-			wrapTdTagsRowspan(number.Comma(pkgCount), "center", rowspan),
+			wrapTag(td, pkgName, withRowspan(rowspan)),
+			wrapTag(td, percentage(pkgCount, cfg.modCount), withClass(center), withRowspan(rowspan)),
+			wrapTag(td, number.Comma(pkgCount), withClass(center), withRowspan(rowspan)),
 		)
 		table = append(table, cfg.averageCols(pkgCount, pkg, rowspan)...)
 		table = append(table, "</tr>")
@@ -122,9 +126,9 @@ func newStatsTable(mod *Module, cfg *statsConfig) string {
 			fileName, fileCount := e2.Tuple()
 			table = append(table,
 				"<tr>",
-				wrapTdTags(number.Comma(fileCount), "right"),
-				wrapTdTags(percentage(fileCount, pkgCount), "center"),
-				wrapTdTags(fileName, ""),
+				wrapTag(td, number.Comma(fileCount), withClass(right+detailsClass)),
+				wrapTag(td, percentage(fileCount, pkgCount), withClass(center+detailsClass)),
+				wrapTag(td, fileName, withClass(detailsClass)),
 				"</tr>",
 			)
 		}

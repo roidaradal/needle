@@ -15,12 +15,12 @@ import (
 
 // Create report HTML file from template
 func BuildReport(mod *Module, path string) error {
+	report := templateHTML
 	// Uncomment this block to test on template.html
 	// report, err := io.ReadFile("template.html")
 	// if err != nil {
 	// 	return err
 	// }
-	report := templateHTML
 	// Initialize replacements
 	replacements := dict.StringMap{
 		"ModuleName": mod.Name,
@@ -59,14 +59,14 @@ func addModReport(mod *Module, rep dict.StringMap) {
 		node := mod.Nodes[packageToNodeName(pkgName)]
 		table = append(table,
 			"<tr>",
-			wrapTdTags(pkgName, ""),
-			wrapTdTags(percentage(count, mod.Stats.FileCount), "center"),
-			wrapTdTags(number.Comma(count), "center"),
+			wrapTag(td, pkgName),
+			wrapTag(td, percentage(count, mod.Stats.FileCount), withClass(center)),
+			wrapTag(td, number.Comma(count), withClass(center)),
 			lang.Ternary(hasTest,
-				wrapTdTags(fmt.Sprintf("%d | %d", pkg.FileTypes[FILE_CODE], pkg.FileTypes[FILE_TEST]), "center"),
+				wrapTag(td, fmt.Sprintf("%d | %d", pkg.FileTypes[FILE_CODE], pkg.FileTypes[FILE_TEST]), withClass(center)),
 				"",
 			),
-			wrapTdTags(strings.Join(node.Files, "<br/>"), ""),
+			wrapTag(td, strings.Join(node.Files, "<br/>"), withClass("mod-files-list hidden")),
 			"</tr>",
 		)
 	}
@@ -86,7 +86,7 @@ func addModReport(mod *Module, rep dict.StringMap) {
 		key = fmt.Sprintf("%sFileShare", fileType)
 		rep[key] = percentage(typeCount, fileCount)
 	}
-	rep["ModuleTableHeader"] = lang.Ternary(hasTest, "<th>Split</th>", "")
+	rep["ModuleTableHeader"] = lang.Ternary(hasTest, wrapTag(th, "Code | Test", withTitle("Code Files | Test Files")), "")
 	rep["ModuleTable"] = strings.Join(table, "")
 }
 

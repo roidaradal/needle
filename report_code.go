@@ -65,6 +65,7 @@ func addCodeReport(mod *Module, rep dict.StringMap) {
 	lookup := ds.NewLookupCode(mod.Packages)
 
 	rep["CodeLinesTable"] = newCodeBreakdown(mod, &codeBreakdownConfig{
+		name:       "lines",
 		lookup:     lookup,
 		modCount:   mod.Stats.LineCount,
 		modCounter: mod.Code.Lines,
@@ -77,6 +78,7 @@ func addCodeReport(mod *Module, rep dict.StringMap) {
 	})
 
 	rep["CodeCharsTable"] = newCodeBreakdown(mod, &codeBreakdownConfig{
+		name:       "chars",
 		lookup:     lookup,
 		modCount:   mod.Stats.CharCount,
 		modCounter: mod.Code.Chars,
@@ -89,18 +91,21 @@ func addCodeReport(mod *Module, rep dict.StringMap) {
 	})
 
 	rep["GlobalsTable"] = newCodeTable(mod, &codeConfig{
+		name:      "globals",
 		lookup:    lookup,
 		blockType: CODE_GLOBAL,
 		keys:      []CodeType{PUB_CONST, PRIV_CONST, PUB_VAR, PRIV_VAR},
 	})
 
 	rep["FunctionsTable"] = newCodeTable(mod, &codeConfig{
+		name:      "functions",
 		lookup:    lookup,
 		blockType: CODE_FUNCTION,
 		keys:      []CodeType{PUB_FUNCTION, PRIV_FUNCTION, PUB_METHOD, PRIV_METHOD},
 	})
 
 	rep["TypesTable"] = newCodeTable(mod, &codeConfig{
+		name:      "types",
 		lookup:    lookup,
 		blockType: CODE_TYPE,
 		keys:      []CodeType{PUB_STRUCT, PRIV_STRUCT, PUB_INTERFACE, PRIV_INTERFACE, PUB_ALIAS, PRIV_ALIAS},
@@ -108,6 +113,7 @@ func addCodeReport(mod *Module, rep dict.StringMap) {
 }
 
 type codeBreakdownConfig struct {
+	name       string
 	lookup     ds.LookupCode[*Package]
 	modCount   int
 	modCounter dict.Counter[LineType]
@@ -117,6 +123,7 @@ type codeBreakdownConfig struct {
 
 // Create new code breakdown table (lines / chars)
 func newCodeBreakdown(mod *Module, cfg *codeBreakdownConfig) string {
+	detailsClass := fmt.Sprintf(" hidden code-%s-list", cfg.name)
 	table := make([]string, 0)
 	counts := list.Map(mod.Packages, cfg.countFn)
 	pkgEntries := dict.Entries(dict.Zip(mod.PackageNames(), counts))
@@ -127,19 +134,19 @@ func newCodeBreakdown(mod *Module, cfg *codeBreakdownConfig) string {
 		counter := cfg.pkgCounter(pkg)
 		table = append(table,
 			"<tr>",
-			wrapTdTagsRowspan(pkgName, "", 2),
-			wrapTdTags(number.Comma(pkgCount), "center local"),
+			wrapTag(td, pkgName, withRowspan(2)),
+			wrapTag(td, number.Comma(pkgCount), withClass(centerLocal)),
 		)
 		row := []string{
 			"</tr><tr>",
-			wrapTdTags(percentage(pkgCount, cfg.modCount), "center"),
+			wrapTag(td, percentage(pkgCount, cfg.modCount), withClass(center+detailsClass)),
 		}
 		for _, lineType := range lineTypes {
 			typeCount := counter[lineType]
-			table = append(table, wrapTdTagsColspan(number.Comma(typeCount), "center", 2))
+			table = append(table, wrapTag(td, number.Comma(typeCount), withClass(center), withColspan(2)))
 			row = append(row,
-				wrapTdTags(percentage(typeCount, pkgCount), "center local"),
-				wrapTdTags(percentage(typeCount, cfg.modCounter[lineType]), "center global"),
+				wrapTag(td, percentage(typeCount, pkgCount), withClass(centerLocal+detailsClass)),
+				wrapTag(td, percentage(typeCount, cfg.modCounter[lineType]), withClass(centerGlobal+detailsClass)),
 			)
 		}
 		table = append(table, strings.Join(row, ""), "</tr>")
@@ -147,21 +154,23 @@ func newCodeBreakdown(mod *Module, cfg *codeBreakdownConfig) string {
 	// Footer
 	table = append(table,
 		"<tr>",
-		wrapTdTagsRowspan("TOTAL", "center", 2),
-		wrapTdTagsRowspan(number.Comma(cfg.modCount), "center", 2),
+		wrapTag(td, "TOTAL", withClass(center), withRowspan(2)),
+		wrapTag(td, number.Comma(cfg.modCount), withClass(center), withRowspan(2)),
 	)
 	row := []string{"</tr><tr>"}
 	for _, lineType := range lineTypes {
 		typeCount := cfg.modCounter[lineType]
 		bottomCell := fmt.Sprintf("%s<br/><b>%s</b>", percentage(typeCount, cfg.modCount), lineType)
-		table = append(table, wrapTdTagsColspan(number.Comma(typeCount), "center global", 2))
-		row = append(row, wrapTdTagsColspan(bottomCell, "center", 2))
+
+		table = append(table, wrapTag(td, number.Comma(typeCount), withClass(centerGlobal), withColspan(2)))
+		row = append(row, wrapTag(td, bottomCell, withClass(center), withColspan(2)))
 	}
 	table = append(table, strings.Join(row, ""), "</tr>")
 	return strings.Join(table, "")
 }
 
 type codeConfig struct {
+	name      string
 	lookup    ds.LookupCode[*Package]
 	blockType BlockType
 	keys      []CodeType
@@ -169,6 +178,7 @@ type codeConfig struct {
 
 // Create new code table (globals / functions / types)
 func newCodeTable(mod *Module, cfg *codeConfig) string {
+	detailsClass := fmt.Sprintf(" hidden code-%s-list", cfg.name)
 	table := make([]string, 0)
 	activeKeys := make([]CodeType, 0)
 
@@ -176,17 +186,20 @@ func newCodeTable(mod *Module, cfg *codeConfig) string {
 	colspan := 2
 	table = append(table,
 		"<thead><tr>",
-		"<th>Packages</th>",
-		fmt.Sprintf("<th>%ss</th>", cfg.blockType),
+		wrapTag(th, "Packages"),
+		wrapTag(th, string(cfg.blockType)+"s"),
 	)
 	for _, key := range cfg.keys {
 		if mod.Code.Types[key] == 0 {
 			continue
 		}
 		activeKeys = append(activeKeys, key)
-		table = append(table, fmt.Sprintf("<th colspan='2'>%s</th>", key))
+
+		table = append(table, wrapTag(th, string(key), withColspan(2)))
 		colspan += 2
 	}
+	onclickFn := fmt.Sprintf("toggleList('code','%s','%%')", cfg.name)
+	table = append(table, wrapTag(th, button("Show %", withID("toggle-code-"+cfg.name), onclick(onclickFn))))
 	table = append(table, "</tr></thead><tbody>")
 
 	// Body
@@ -207,19 +220,19 @@ func newCodeTable(mod *Module, cfg *codeConfig) string {
 		pkg := cfg.lookup[pkgName]
 		table = append(table,
 			"<tr>",
-			wrapTdTagsRowspan(pkgName, "", 2),
-			wrapTdTags(number.Comma(pkgCount), "center local"),
+			wrapTag(td, pkgName, withRowspan(2)),
+			wrapTag(td, number.Comma(pkgCount), withClass(centerLocal)),
 		)
 		row := []string{
 			"</tr><tr>",
-			wrapTdTags(percentage(pkgCount, modCount), "center"),
+			wrapTag(td, percentage(pkgCount, modCount), withClass(center+detailsClass)),
 		}
 		for _, key := range activeKeys {
 			count := pkg.Codes[key]
-			table = append(table, wrapTdTagsColspan(number.Comma(count), "center", 2))
+			table = append(table, wrapTag(td, number.Comma(count), withClass(center), withColspan(2)))
 			row = append(row,
-				wrapTdTags(percentage(count, pkgCount), "center local"),
-				wrapTdTags(percentage(count, mod.Code.Types[key]), "center global"),
+				wrapTag(td, percentage(count, pkgCount), withClass(centerLocal+detailsClass)),
+				wrapTag(td, percentage(count, mod.Code.Types[key]), withClass(centerGlobal+detailsClass)),
 			)
 		}
 		table = append(table, strings.Join(row, ""), "</tr>")
@@ -228,21 +241,21 @@ func newCodeTable(mod *Module, cfg *codeConfig) string {
 	// Footer
 	table = append(table,
 		"<tr>",
-		wrapTdTagsRowspan("TOTAL", "center", 2),
-		wrapTdTagsRowspan(number.Comma(modCount), "center", 2),
+		wrapTag(td, "TOTAL", withClass(center), withRowspan(2)),
+		wrapTag(td, number.Comma(modCount), withClass(center), withRowspan(2)),
 	)
 	row := []string{"</tr><tr>"}
 	for _, key := range activeKeys {
 		count := mod.Code.Types[key]
 		bottomCell := fmt.Sprintf("%s<br/><b>%s</b>", percentage(count, modCount), key)
-		table = append(table, wrapTdTagsColspan(number.Comma(count), "center global", 2))
-		row = append(row, wrapTdTagsColspan(bottomCell, "center", 2))
+		table = append(table, wrapTag(td, number.Comma(count), withClass(centerGlobal), withColspan(2)))
+		row = append(row, wrapTag(td, bottomCell, withClass(center), withColspan(2)))
 	}
 
 	var lastRow string = ""
 	if len(blankPackages) > 0 {
 		lastRow = fmt.Sprintf("Packages without %ss: %d<br/>%s", cfg.blockType, len(blankPackages), strings.Join(blankPackages, ", "))
-		lastRow = "<tr>" + wrapTdTagsColspan(lastRow, "", colspan) + "</tr>"
+		lastRow = "<tr>" + wrapTag(td, lastRow, withColspan(colspan)) + "</tr>"
 	}
 	table = append(table,
 		strings.Join(row, ""), "</tr>",
