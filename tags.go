@@ -11,6 +11,7 @@ const (
 	tr           = "tr"
 	td           = "td"
 	th           = "th"
+	left         = "left"
 	center       = "center"
 	right        = "right"
 	centerLocal  = "center local"

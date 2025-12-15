@@ -4,9 +4,22 @@ TODO:
         - Consider function headers that span multiple lines
         - Get documentation from comments
     - viz: 
-        - graphical representation of dependencies 
+        - improve layout: 
+            - try out all arrangements of nodes per level 
+            - get product of arrangements and choose layout which minimizes total distance of lines 
+            - consider also counting line intersections and edges passing through nodes
+            - consider moving up nodes closer to first use (e.g. stayio: app/daemon move closer to cmd/web)
+            - dynamic sizing for dependency graph
         - graphs/charts of module stats
+    - metrics:
+        - Coupling Level
+        - Readability (lines per file, chars per line, etc.)
 ###############################################################
+v0.2.8 - Dependency Graph    
+    x Commit: 2025-12-15 14:47
+    x Remove template.html from report
+    x Basic dependency graph layout 
+    x Switch Graph view and Table view
 v0.2.7 - Report Toggles
     x Commit: 2025-12-12 15:05
     x Remove needle.html from repo

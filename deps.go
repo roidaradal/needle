@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -54,6 +55,38 @@ func computeDependencyLevels(mod *Module) error {
 	}
 	mod.Deps.Levels = dict.GroupByValue(levelOf)
 	dict.SortValues(mod.Deps.Levels)
+
+	return nil
+}
+
+// Compute the dependency graph layout
+func computeDependencyLayout(mod *Module) error {
+	mod.Deps.Nodes = make(dict.StringMap)
+	mod.Deps.Edges = make([]string, 0)
+	const columnWidth, rowHeight = 100, 100
+	const cellRadius = 50
+
+	// Add edge list
+	for pkg, deps := range mod.Deps.Of {
+		pkg = nodeToPackageName(pkg)
+		for _, dependency := range deps {
+			dependency = nodeToPackageName(dependency)
+			mod.Deps.Edges = append(mod.Deps.Edges, fmt.Sprintf("'%s-%s'", pkg, dependency))
+		}
+	}
+
+	numLevels := len(mod.Deps.Levels)
+	for col := range numLevels {
+		level := numLevels - col - 1
+		isSink := level == 0
+		x := (columnWidth * col) + cellRadius
+		offset := 50 * (col % 2)
+		for row, pkg := range mod.Deps.Levels[level] {
+			pkg = nodeToPackageName(pkg)
+			y := (rowHeight * row) + cellRadius + offset
+			mod.Deps.Nodes[pkg] = fmt.Sprintf("{x : %d, y: %d, sink: %v}", x, y, isSink)
+		}
+	}
 
 	return nil
 }

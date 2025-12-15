@@ -24,6 +24,8 @@ type Deps struct {
 	External      []string           // List of external subpackages
 	Independent   []string           // List of independent subpackages (not in dependency DAG)
 	Levels        map[int][]string   // Non-independent subpackage levels (0 = sink)
+	Nodes         dict.StringMap     // Non-independent subpackage => {x: xPosition, y: yPosition}
+	Edges         []string           // List of node1-node2 edges
 }
 
 // Stats info

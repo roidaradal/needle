@@ -2,6 +2,7 @@ package main
 
 import (
 	"cmp"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -94,17 +95,27 @@ func addDepsReport(mod *Module, rep dict.StringMap) {
 				out = append(out,
 					"<tr>",
 					wrapTag(td, str.Int(level), withClass(center)),
-					wrapTag(td, nodeToPackageName(subPkg)),
+					wrapTag(td, nodeToPackageName(subPkg), withClass(left)),
 					wrapTag(td, str.Int(outCount), withClass(center)),
 					wrapTag(td, str.Int(inCount), withClass(center)),
-					wrapTag(td, outDetails, withClass("deps-dependent-list hidden")),
-					wrapTag(td, inDetails, withClass("deps-dependent-list hidden")),
+					wrapTag(td, outDetails, withClass("deps-dependent-list hidden left")),
+					wrapTag(td, inDetails, withClass("deps-dependent-list hidden left")),
 					"</tr>",
 				)
 			}
 		}
+		button := "<button id='view-deps-dependent' onclick='toggleDependentView()'>Show Graph</button><br/>"
 		rep["DependencyTable"] = strings.Join(out, "") + "</tbody>"
+		rep["DependencyCanvas"] = button + "<canvas id='deps-dependent-graph' width='1000' height='500' class='hidden'></canvas>"
+		rep["DependencyEdges"] = strings.Join(mod.Deps.Edges, ", ")
+		rep["DependencyNodes"] = strings.Join(list.Map(dict.Entries(mod.Deps.Nodes), func(e dict.Entry[string, string]) string {
+			k, v := e.Tuple()
+			return fmt.Sprintf("'%s' : %s", k, v)
+		}), ",")
 	} else {
 		rep["DependencyTable"] = wrapTags("No dependent packages", tbody, tr, td)
+		rep["DependencyCanvas"] = ""
+		rep["DependencyEdges"] = ""
+		rep["DependencyNodes"] = ""
 	}
 }

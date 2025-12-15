@@ -31,6 +31,7 @@ func BuildModule(path string) (*Module, error) {
 		buildModuleNodes,        // module
 		buildModuleTree,         // module
 		computeDependencyLevels, // deps
+		computeDependencyLayout, // deps
 	}
 	for _, decorator := range decorators {
 		err := decorator(mod)

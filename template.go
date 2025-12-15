@@ -60,6 +60,9 @@ var templateHTML = `
             width: 100%; height: 100%;
             overflow: auto;
         }
+        #deps {
+            text-align: center;
+        }
         button.active {
             background-color: yellow;
             font-weight: bold;
@@ -80,6 +83,9 @@ var templateHTML = `
         }
         button:hover {
             cursor: pointer;
+        }
+        canvas{
+            border: 1px solid black;
         }
     </style>
 </head>
@@ -111,6 +117,7 @@ var templateHTML = `
             <button id="btn-deps-external" onclick="changeSubTab('deps', 'external')">External</button>
         </div>
     </div>
+
     <div id="body">     
         <div id="mod">
             <div id="mod-summary">
@@ -289,7 +296,8 @@ var templateHTML = `
         <div id="deps" class="hidden">
             <div id="deps-dependent">
                 <h2>Dependent: %DependentCount% / %ModPackageCount%</h2>
-                <table>
+                %DependencyCanvas%
+                <table id="deps-dependent-table">
                     %DependencyTable%
                 </table>
             </div>
@@ -311,11 +319,17 @@ var templateHTML = `
     </div>
 
     <script>
+        const nodeRadius = 30;
+        const nodes = {%DependencyNodes%};
+        const edges = [%DependencyEdges%];
         var currentTab = 'mod';
         var currentSubTab = {
             'mod'   : 'summary',
             'code'  : 'summary',
             'deps'  : 'dependent',
+        };
+        var currentView = {
+            'deps-dependent': 'table',
         };
         var isExpanded = {};
         var $id = function(id) { return document.getElementById(id) };
@@ -359,6 +373,75 @@ var templateHTML = `
             }         
             isExpanded[key] = !expanded; // toggle
         }
+        function drawNode(ctx, node, name) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI*2);
+            ctx.fillStyle = node.sink ? '#FF0' : '#DDE';
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.stroke();
+            ctx.fillStyle = '#F00';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(name, node.x, node.y);
+        }
+        function drawEdge(ctx, node1, node2) {
+            const angle = Math.atan2(node2.y-node1.y, node2.x-node1.x);
+            const arrowSize = 10;
+            const x1 = node1.x + Math.cos(angle) * nodeRadius;
+            const y1 = node1.y + Math.sin(angle) * nodeRadius;
+            const x2 = node2.x - Math.cos(angle) * nodeRadius;
+            const y2 = node2.y - Math.sin(angle) * nodeRadius;
+
+            ctx.beginPath();
+            ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+            ctx.strokeStyle = '#555';
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(x2, y2); ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-arrowSize, -arrowSize / 2);
+            ctx.lineTo(-arrowSize, arrowSize / 2);
+            ctx.closePath();
+            ctx.fillStyle = '#555'; 
+            ctx.fill();
+            ctx.restore();
+        }
+        function drawGraph(ctx) {
+            edges.forEach(edge => {
+                console.log(edge);
+                const parts = edge.split('-');
+                const node1 = nodes[parts[0]];
+                const node2 = nodes[parts[1]];
+                if(node1 && node2) {
+                    drawEdge(ctx, node1, node2);
+                }
+            });
+            for(let key in nodes) {
+                drawNode(ctx, nodes[key], key)
+            }
+        }
+        function toggleDependentView() {
+            if(currentView['deps-dependent'] == 'table') {
+                $id('deps-dependent-graph').classList.remove('hidden');
+                $id('deps-dependent-table').classList.add('hidden');
+                $id('view-deps-dependent').innerHTML = 'Show Table';
+                currentView['deps-dependent'] = 'graph';
+            } else {
+                $id('deps-dependent-graph').classList.add('hidden');
+                $id('deps-dependent-table').classList.remove('hidden');
+                $id('view-deps-dependent').innerHTML = 'Show Graph';
+                currentView['deps-dependent'] = 'table';
+            }
+        }
+        window.onload = function(){
+            const canvas = $id('deps-dependent-graph');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            drawGraph(ctx);
+        };
     </script>
 </div></body>
 </html>
