@@ -1,6 +1,8 @@
 TODO:
     - api:
-        - Generate package public APIs (list)
+        - Public: Functions, Struct & Methods, Interfaces, Alias, Consts/Vars
+        - Private: Functions, Struct & Methods, Interfaces, Alias, Consts/Vars
+        - For package, check if has package description with single comment above
         - Consider function headers that span multiple lines
         - Get documentation from comments
     - viz: 
@@ -15,6 +17,10 @@ TODO:
         - Coupling Level
         - Readability (lines per file, chars per line, etc.)
 ###############################################################
+v0.2.9 - Output File Path 
+    x Commit: 2026-01-15 12:07
+    x Reorganize core logic into internal package
+    x Change output file path to HOME_FOLDER/.needle/<moduleName>.html
 v0.2.8 - Dependency Graph    
     x Commit: 2025-12-15 14:47
     x Remove template.html from report

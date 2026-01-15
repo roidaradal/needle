@@ -1,4 +1,4 @@
-package main
+package needle
 
 import (
 	"github.com/roidaradal/fn/dict"

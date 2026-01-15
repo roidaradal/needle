@@ -1,7 +1,9 @@
-package main
+package needle
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -14,7 +16,7 @@ import (
 )
 
 // Create report HTML file from template
-func BuildReport(mod *Module, path string) error {
+func BuildReport(mod *Module) (string, error) {
 	report := templateHTML
 	// Uncomment this block to test on template.html
 	// report, err := io.ReadFile("template.html")
@@ -40,8 +42,33 @@ func BuildReport(mod *Module, path string) error {
 		key = templateKey(key)
 		report = strings.ReplaceAll(report, key, replacement)
 	}
+
+	// Build output path (~/.needle/modName.html)
+	path, err := getOutputPath(mod.Name)
+	if err != nil {
+		return "", err
+	}
+
 	// Save report to output file
-	return io.SaveString(report, path)
+	err = io.SaveString(report, path)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+// Build output file path
+func getOutputPath(modName string) (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	path := fmt.Sprintf("%s/.needle/%s.html", filepath.ToSlash(homeDir), modName)
+	err = io.EnsurePathExists(path)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
 }
 
 // Add module report data
